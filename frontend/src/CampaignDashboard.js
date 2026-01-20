@@ -255,7 +255,8 @@ function CampaignDashboard() {
               <th>Influencers</th>
               <th>Deliverables</th>
               <th>Status</th>
-              <th>Created On</th>
+              <th>Start Date</th>
+              <th>End Date</th>
             </tr>
           </thead>
           <tbody>
@@ -282,6 +283,7 @@ function CampaignDashboard() {
                   </span>
                 </td>
                 <td className="date-cell">{campaign.start_date}</td>
+                <td className="date-cell">{campaign.end_date || '-'}</td>
               </tr>
             ))}
           </tbody>
