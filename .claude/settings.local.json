@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./start.bat)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(python app.py:*)",
+      "Bash(pip install:*)",
+      "Bash(python upgrade_schema.py:*)",
+      "Bash(python:*)",
+      "Bash(sqlite3:*)",
+      "Bash(dir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
