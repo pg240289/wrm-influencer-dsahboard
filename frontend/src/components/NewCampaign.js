@@ -12,6 +12,7 @@ function NewCampaign() {
   const [users, setUsers] = useState([]);
   const [influencers, setInfluencers] = useState([]);
   const [selectedInfluencers, setSelectedInfluencers] = useState([]);
+  const [brands, setBrands] = useState([]);
 
   const [formData, setFormData] = useState({
     campaign_name: '',
@@ -25,7 +26,7 @@ function NewCampaign() {
   });
 
   useEffect(() => {
-    // Fetch users and influencers for assignment
+    // Fetch users, influencers, and brands for assignment
     const fetchData = async () => {
       try {
         // Fetch users
@@ -37,6 +38,10 @@ function NewCampaign() {
           params: { status: 'active' }
         });
         setInfluencers(influencersResponse.data);
+
+        // Fetch active brands
+        const brandsResponse = await axios.get('/brands');
+        setBrands(brandsResponse.data.filter(b => b.status === 'active'));
       } catch (err) {
         console.log('Could not fetch data for assignment');
       }
@@ -118,7 +123,7 @@ function NewCampaign() {
       setError('Objective is required');
       return false;
     }
-    if (!formData.brand.trim()) {
+    if (!formData.brand) {
       setError('Brand is required');
       return false;
     }
@@ -148,7 +153,7 @@ function NewCampaign() {
       const payload = {
         campaign_name: formData.campaign_name,
         objective: formData.objective,
-        brand: formData.brand,
+        brand: parseInt(formData.brand),
         description: formData.description,
         status: formData.status,
         start_date: formData.start_date,
@@ -236,15 +241,20 @@ function NewCampaign() {
                 <label htmlFor="brand">
                   Brand <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   id="brand"
                   name="brand"
                   value={formData.brand}
                   onChange={handleChange}
-                  placeholder="e.g., Nike"
                   required
-                />
+                >
+                  <option value="">Select brand...</option>
+                  {brands.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
