@@ -122,15 +122,16 @@ class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     campaign_name = db.Column(db.String(200), nullable=False)
     objective = db.Column(db.String(200), nullable=False)
-    brand = db.Column(db.String(100), nullable=False)
+    brand = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(50), nullable=False)
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Campaign creator
-    
+
     # Relationships
+    brand_rel = db.relationship('Brand', backref='campaigns')
     campaign_influencers = db.relationship('CampaignInfluencer', back_populates='campaign', cascade='all, delete-orphan')
     content = db.relationship('Content', backref='campaign', lazy=True)
 
@@ -140,6 +141,7 @@ class Campaign(db.Model):
             'campaign_name': self.campaign_name,
             'objective': self.objective,
             'brand': self.brand,
+            'brand_name': self.brand_rel.name if self.brand_rel else None,
             'description': self.description,
             'status': self.status,
             'start_date': self.start_date.strftime('%Y-%m-%d'),
@@ -307,6 +309,30 @@ class Influencer(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
             'total_campaigns': len(self.campaign_assignments)
         }
+
+class Brand(db.Model):
+    """Master table for all brands"""
+    __tablename__ = 'brand'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(50), default='active')  # active, inactive
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'status': self.status or 'active',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None,
+            'created_by_user_id': self.created_by_user_id
+        }
+
 
 class CampaignInfluencer(db.Model):
     """Links influencers to campaigns with campaign-specific details"""
@@ -962,14 +988,19 @@ def create_campaign(user):
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Missing required field: {field}'}), 400
-    
+
+    # Validate brand exists
+    brand_obj = Brand.query.get(data['brand'])
+    if not brand_obj:
+        return jsonify({'error': 'Invalid brand'}), 400
+
     try:
         # Parse dates
         start_date = datetime.strptime(data['start_date'], '%Y-%m-%d')
         end_date = None
         if data.get('end_date'):
             end_date = datetime.strptime(data['end_date'], '%Y-%m-%d')
-        
+
         # Create campaign
         campaign = Campaign(
             campaign_name=data['campaign_name'],
@@ -1422,6 +1453,101 @@ def delete_influencer(user, influencer_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete influencer', 'details': str(e)}), 500
+
+# ==================== BRAND API ROUTES ====================
+
+@app.route('/api/brands', methods=['GET'])
+@token_required
+def get_brands(user):
+    """Get all brands with optional search filter"""
+    search = request.args.get('search', '').strip()
+
+    query = Brand.query
+
+    if search:
+        search_filter = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                Brand.name.ilike(search_filter),
+                Brand.description.ilike(search_filter)
+            )
+        )
+
+    brands = query.order_by(Brand.name.asc()).all()
+    return jsonify([brand.to_dict() for brand in brands])
+
+@app.route('/api/brands/<int:brand_id>', methods=['GET'])
+@token_required
+def get_brand(user, brand_id):
+    """Get single brand details"""
+    brand = Brand.query.get_or_404(brand_id)
+    return jsonify(brand.to_dict())
+
+@app.route('/api/brands', methods=['POST'])
+@role_required('Admin', 'Manager')
+def create_brand(user):
+    """Create a new brand"""
+    data = request.get_json()
+
+    if not data.get('name'):
+        return jsonify({'error': 'Name is required'}), 400
+
+    try:
+        brand = Brand(
+            name=data['name'],
+            description=data.get('description', ''),
+            status=data.get('status', 'active'),
+            created_by_user_id=user.id
+        )
+
+        db.session.add(brand)
+        db.session.commit()
+
+        return jsonify(brand.to_dict()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create brand', 'details': str(e)}), 500
+
+@app.route('/api/brands/<int:brand_id>', methods=['PUT'])
+@role_required('Admin', 'Manager')
+def update_brand(user, brand_id):
+    """Update brand details"""
+    brand = Brand.query.get_or_404(brand_id)
+    data = request.get_json()
+
+    try:
+        if 'name' in data:
+            brand.name = data['name']
+        if 'description' in data:
+            brand.description = data['description']
+        if 'status' in data:
+            brand.status = data['status']
+
+        brand.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify(brand.to_dict())
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update brand', 'details': str(e)}), 500
+
+@app.route('/api/brands/<int:brand_id>', methods=['DELETE'])
+@role_required('Admin')
+def delete_brand(user, brand_id):
+    """Delete brand"""
+    brand = Brand.query.get_or_404(brand_id)
+
+    try:
+        db.session.delete(brand)
+        db.session.commit()
+
+        return jsonify({'message': 'Brand deleted successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete brand', 'details': str(e)}), 500
 
 # ==================== INITIALIZE DATABASE ====================
 

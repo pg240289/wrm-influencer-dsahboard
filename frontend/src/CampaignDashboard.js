@@ -77,6 +77,17 @@ function CampaignDashboard() {
           <div className="header-actions-modern">
             <button
               className="btn-secondary-header"
+              onClick={() => navigate('/brands')}
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Brand Master
+            </button>
+            <button
+              className="btn-secondary-header"
               onClick={() => navigate('/influencers')}
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -255,7 +266,8 @@ function CampaignDashboard() {
               <th>Influencers</th>
               <th>Deliverables</th>
               <th>Status</th>
-              <th>Created On</th>
+              <th>Start Date</th>
+              <th>End Date</th>
             </tr>
           </thead>
           <tbody>
@@ -282,6 +294,7 @@ function CampaignDashboard() {
                   </span>
                 </td>
                 <td className="date-cell">{campaign.start_date}</td>
+                <td className="date-cell">{campaign.end_date || '-'}</td>
               </tr>
             ))}
           </tbody>

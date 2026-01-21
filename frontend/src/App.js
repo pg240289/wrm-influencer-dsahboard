@@ -9,6 +9,8 @@ import NewCampaign from './components/NewCampaign';
 import UserManagement from './components/UserManagement';
 import InfluencerList from './components/InfluencerList';
 import InfluencerForm from './components/InfluencerForm';
+import BrandList from './components/BrandList';
+import BrandForm from './components/BrandForm';
 import './App.css';
 
 function App() {
@@ -71,6 +73,30 @@ function App() {
               element={
                 <ProtectedRoute requiredAnyRole={['Admin', 'Manager']}>
                   <InfluencerForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brands"
+              element={
+                <ProtectedRoute>
+                  <BrandList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brands/new"
+              element={
+                <ProtectedRoute requiredAnyRole={['Admin', 'Manager']}>
+                  <BrandForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brands/:id/edit"
+              element={
+                <ProtectedRoute requiredAnyRole={['Admin', 'Manager']}>
+                  <BrandForm />
                 </ProtectedRoute>
               }
             />
