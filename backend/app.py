@@ -163,6 +163,7 @@ class Campaign(db.Model):
             inf_data.update({
                 'assignment_id': ci.id,
                 'platform': ci.platform,
+                'link': ci.link,
                 'deliverables_count': ci.deliverables_count,
                 'status': ci.status,
                 'agreed_amount': ci.agreed_amount
@@ -344,6 +345,7 @@ class CampaignInfluencer(db.Model):
 
     # Campaign-specific details
     platform = db.Column(db.String(50), nullable=False)  # Instagram, YouTube, TikTok, Twitter
+    link = db.Column(db.String(500))  # Platform-specific link/URL for this influencer
     deliverables_count = db.Column(db.Integer, default=0)
     content_type = db.Column(db.String(100))  # "3 Reels + 2 Stories + 1 Post"
 
@@ -382,6 +384,7 @@ class CampaignInfluencer(db.Model):
             'campaign_id': self.campaign_id,
             'influencer_id': self.influencer_id,
             'platform': self.platform,
+            'link': self.link,
             'deliverables_count': self.deliverables_count,
             'content_type': self.content_type,
             'agreed_amount': self.agreed_amount,
@@ -1042,7 +1045,8 @@ def create_campaign(user):
                     campaign_id=campaign.id,
                     influencer_id=assignment['influencer_id'],
                     platform=assignment['platform'],
-                    status='pending',  # Default status
+                    link=assignment.get('link'),
+                    status='pending',
                     assigned_by_user_id=user.id,
                     assigned_at=datetime.utcnow()
                 )

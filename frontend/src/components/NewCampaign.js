@@ -86,9 +86,20 @@ function NewCampaign() {
           !(item.influencer_id === influencerId && item.platform === platform)
         );
       } else {
-        // Add new influencer-platform combo
-        return [...prev, { influencer_id: influencerId, platform }];
+        // Add new influencer-platform combo with empty link
+        return [...prev, { influencer_id: influencerId, platform, link: '' }];
       }
+    });
+  };
+
+  const handleInfluencerLinkChange = (influencerId, platform, link) => {
+    setSelectedInfluencers(prev => {
+      return prev.map(item => {
+        if (item.influencer_id === influencerId && item.platform === platform) {
+          return { ...item, link };
+        }
+        return item;
+      });
     });
   };
 
@@ -96,6 +107,13 @@ function NewCampaign() {
     return selectedInfluencers.some(item =>
       item.influencer_id === influencerId && item.platform === platform
     );
+  };
+
+  const getInfluencerLink = (influencerId, platform) => {
+    const item = selectedInfluencers.find(
+      item => item.influencer_id === influencerId && item.platform === platform
+    );
+    return item?.link || '';
   };
 
   const getPlatformsForInfluencer = (influencer) => {
@@ -421,20 +439,31 @@ function NewCampaign() {
 
                       <div className="platform-checkboxes">
                         {platforms.map(platform => (
-                          <label key={platform} className="platform-checkbox-label">
-                            <input
-                              type="checkbox"
-                              checked={isInfluencerSelected(inf.id, platform)}
-                              onChange={() => handleInfluencerSelection(inf.id, platform)}
-                            />
-                            <span className="platform-name">{platform}</span>
-                            <span className="platform-followers">
-                              {platform === 'Instagram' && formatNumber(inf.instagram_followers)}
-                              {platform === 'YouTube' && formatNumber(inf.youtube_subscribers)}
-                              {platform === 'TikTok' && formatNumber(inf.tiktok_followers)}
-                              {platform === 'Twitter' && formatNumber(inf.twitter_followers)}
-                            </span>
-                          </label>
+                          <div key={platform} className="platform-row">
+                            <label className="platform-checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={isInfluencerSelected(inf.id, platform)}
+                                onChange={() => handleInfluencerSelection(inf.id, platform)}
+                              />
+                              <span className="platform-name">{platform}</span>
+                              <span className="platform-followers">
+                                {platform === 'Instagram' && formatNumber(inf.instagram_followers)}
+                                {platform === 'YouTube' && formatNumber(inf.youtube_subscribers)}
+                                {platform === 'TikTok' && formatNumber(inf.tiktok_followers)}
+                                {platform === 'Twitter' && formatNumber(inf.twitter_followers)}
+                              </span>
+                            </label>
+                            {isInfluencerSelected(inf.id, platform) && (
+                              <input
+                                type="url"
+                                className="platform-link-input"
+                                placeholder={`Enter ${platform} profile/post link...`}
+                                value={getInfluencerLink(inf.id, platform)}
+                                onChange={(e) => handleInfluencerLinkChange(inf.id, platform, e.target.value)}
+                              />
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
