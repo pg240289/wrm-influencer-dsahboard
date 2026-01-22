@@ -1151,10 +1151,12 @@ def get_campaign_analytics(user, campaign_id):
         assigned_user_ids = [u.id for u in campaign.assigned_users]
         if user.id not in assigned_user_ids:
             return jsonify({'error': 'Insufficient permissions'}), 403
-    
+
     # Calculate daily metrics
     content_by_date = {}
     for content in campaign.content:
+        if not content.published_at:
+            continue
         date_key = content.published_at.strftime('%Y-%m-%d')
         if date_key not in content_by_date:
             content_by_date[date_key] = {
@@ -1164,11 +1166,10 @@ def get_campaign_analytics(user, campaign_id):
                 'comments': 0,
                 'content_count': 0
             }
-        content_by_date[date_key]['views'] += content.views
-        content_by_date[date_key]['likes'] += content.likes
-        content_by_date[date_key]['comments'] += content.comments
+        content_by_date[date_key]['views'] += content.views or 0
+        content_by_date[date_key]['likes'] += content.likes or 0
+        content_by_date[date_key]['comments'] += content.comments or 0
         content_by_date[date_key]['content_count'] += 1
-    
     daily_metrics = sorted(content_by_date.values(), key=lambda x: x['date'])
     
     # Calculate platform breakdown
