@@ -122,7 +122,7 @@ class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     campaign_name = db.Column(db.String(200), nullable=False)
     objective = db.Column(db.String(200), nullable=False)
-    brand = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(50), nullable=False)
     start_date = db.Column(db.DateTime, nullable=False)
@@ -131,7 +131,7 @@ class Campaign(db.Model):
     created_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Campaign creator
 
     # Relationships
-    brand_rel = db.relationship('Brand', backref='campaigns')
+    brand = db.relationship('Brand', backref='campaigns')
     campaign_influencers = db.relationship('CampaignInfluencer', back_populates='campaign', cascade='all, delete-orphan')
     content = db.relationship('Content', backref='campaign', lazy=True)
 
@@ -140,8 +140,8 @@ class Campaign(db.Model):
             'id': self.id,
             'campaign_name': self.campaign_name,
             'objective': self.objective,
-            'brand': self.brand,
-            'brand_name': self.brand_rel.name if self.brand_rel else None,
+            'brand_id': self.brand_id,
+            'brand_name': self.brand.name if self.brand else None,
             'description': self.description,
             'status': self.status,
             'start_date': self.start_date.strftime('%Y-%m-%d'),
@@ -984,15 +984,15 @@ def create_campaign(user):
     data = request.get_json()
     
     # Validate required fields
-    required_fields = ['campaign_name', 'objective', 'brand', 'status', 'start_date']
+    required_fields = ['campaign_name', 'objective', 'brand_id', 'status', 'start_date']
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Missing required field: {field}'}), 400
 
     # Validate brand exists
-    brand_obj = Brand.query.get(data['brand'])
+    brand_obj = Brand.query.get(data['brand_id'])
     if not brand_obj:
-        return jsonify({'error': 'Invalid brand'}), 400
+        return jsonify({'error': 'Invalid brand_id'}), 400
 
     try:
         # Parse dates
@@ -1005,7 +1005,7 @@ def create_campaign(user):
         campaign = Campaign(
             campaign_name=data['campaign_name'],
             objective=data['objective'],
-            brand=data['brand'],
+            brand_id=data['brand_id'],
             description=data.get('description', ''),
             status=data['status'],
             start_date=start_date,

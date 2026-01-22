@@ -17,7 +17,7 @@ function NewCampaign() {
   const [formData, setFormData] = useState({
     campaign_name: '',
     objective: '',
-    brand: '',
+    brand_id: '',
     description: '',
     status: 'active',
     start_date: '',
@@ -123,7 +123,7 @@ function NewCampaign() {
       setError('Objective is required');
       return false;
     }
-    if (!formData.brand) {
+    if (!formData.brand_id) {
       setError('Brand is required');
       return false;
     }
@@ -153,7 +153,7 @@ function NewCampaign() {
       const payload = {
         campaign_name: formData.campaign_name,
         objective: formData.objective,
-        brand: parseInt(formData.brand),
+        brand_id: parseInt(formData.brand_id),
         description: formData.description,
         status: formData.status,
         start_date: formData.start_date,
@@ -238,13 +238,13 @@ function NewCampaign() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="brand">
+                <label htmlFor="brand_id">
                   Brand <span className="required">*</span>
                 </label>
                 <select
-                  id="brand"
-                  name="brand"
-                  value={formData.brand}
+                  id="brand_id"
+                  name="brand_id"
+                  value={formData.brand_id}
                   onChange={handleChange}
                   required
                 >

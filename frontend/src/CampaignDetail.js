@@ -8,7 +8,10 @@ import './CampaignDetail.css';
 const formatNumber = (num) => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  return num.toString();
+  if(num)
+   return num.toString(); 
+  else 
+  return null;
 };
 
 const formatDate = (dateString) => {
@@ -164,7 +167,7 @@ function CampaignDetail() {
             </div>
             <div className="campaign-meta">
               <span className="campaign-objective">📊 {campaign.objective}</span>
-              <span className="campaign-brand">🏢 {campaign.brand}</span>
+              <span className="campaign-brand">🏢 {campaign.brand_name}</span>
               {campaign.start_date && (
                 <span className="campaign-dates">
                   📅 {formatDate(campaign.start_date)}

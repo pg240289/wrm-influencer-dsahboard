@@ -36,7 +36,7 @@ function CampaignDashboard() {
 
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.campaign_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         campaign.brand.toLowerCase().includes(searchTerm.toLowerCase());
+                         (campaign.brand_name && campaign.brand_name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -282,7 +282,7 @@ function CampaignDashboard() {
                     <span className="campaign-name-text">{campaign.campaign_name}</span>
                   </div>
                 </td>
-                <td className="brand-cell">{campaign.brand}</td>
+                <td className="brand-cell">{campaign.brand_name}</td>
                 <td>{campaign.objective}</td>
                 <td className="center-text">{campaign.num_influencers}</td>
                 <td className="deliverables-cell">
