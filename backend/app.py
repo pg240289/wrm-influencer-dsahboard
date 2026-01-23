@@ -205,13 +205,18 @@ class Influencer(db.Model):
     youtube_subscribers = db.Column(db.Integer, default=0)
     youtube_url = db.Column(db.String(500))
 
-    tiktok_handle = db.Column(db.String(100))
-    tiktok_followers = db.Column(db.Integer, default=0)
-    tiktok_url = db.Column(db.String(500))
+    facebook_handle = db.Column(db.String(100))
+    facebook_followers = db.Column(db.Integer, default=0)
+    facebook_url = db.Column(db.String(500))
 
     twitter_handle = db.Column(db.String(100))
     twitter_followers = db.Column(db.Integer, default=0)
     twitter_url = db.Column(db.String(500))
+
+    linkedin_handle = db.Column(db.String(100))
+    linkedin_followers = db.Column(db.Integer, default=0)
+    linkedin_url = db.Column(db.String(500))
+    rate_per_post_linkedin = db.Column(db.Float)
 
     # Influencer Tier (Nano < 10K, Micro 10K-100K, Macro 100K-1M, Mega > 1M)
     tier = db.Column(db.String(50))
@@ -222,6 +227,9 @@ class Influencer(db.Model):
     rate_per_story_instagram = db.Column(db.Float)
     rate_per_video_youtube = db.Column(db.Float)
     rate_per_short_youtube = db.Column(db.Float)
+    rate_per_post_facebook = db.Column(db.Float)
+    rate_per_reel_facebook = db.Column(db.Float)
+    rate_per_story_facebook = db.Column(db.Float)
     currency = db.Column(db.String(10), default='INR')
 
     # Past Collaborations
@@ -251,8 +259,9 @@ class Influencer(db.Model):
         return max(
             self.instagram_followers or 0,
             self.youtube_subscribers or 0,
-            self.tiktok_followers or 0,
-            self.twitter_followers or 0
+            self.facebook_followers or 0,
+            self.twitter_followers or 0,
+            self.linkedin_followers or 0
         )
 
     def calculate_tier(self):
@@ -285,12 +294,16 @@ class Influencer(db.Model):
             'youtube_handle': self.youtube_handle,
             'youtube_subscribers': self.youtube_subscribers,
             'youtube_url': self.youtube_url,
-            'tiktok_handle': self.tiktok_handle,
-            'tiktok_followers': self.tiktok_followers,
-            'tiktok_url': self.tiktok_url,
+            'facebook_handle': self.facebook_handle,
+            'facebook_followers': self.facebook_followers,
+            'facebook_url': self.facebook_url,
             'twitter_handle': self.twitter_handle,
             'twitter_followers': self.twitter_followers,
             'twitter_url': self.twitter_url,
+            'linkedin_handle': self.linkedin_handle,
+            'linkedin_followers': self.linkedin_followers,
+            'linkedin_url': self.linkedin_url,
+            'rate_per_post_linkedin': self.rate_per_post_linkedin,
             'tier': self.tier,
             'max_followers': self.get_max_followers(),
             'rate_per_post_instagram': self.rate_per_post_instagram,
@@ -298,6 +311,9 @@ class Influencer(db.Model):
             'rate_per_story_instagram': self.rate_per_story_instagram,
             'rate_per_video_youtube': self.rate_per_video_youtube,
             'rate_per_short_youtube': self.rate_per_short_youtube,
+            'rate_per_post_facebook': self.rate_per_post_facebook,
+            'rate_per_reel_facebook': self.rate_per_reel_facebook,
+            'rate_per_story_facebook': self.rate_per_story_facebook,
             'currency': self.currency,
             'past_brands': self.past_brands or [],
             'worked_with_wrm': self.worked_with_wrm,
@@ -1300,19 +1316,27 @@ def create_influencer(user):
             youtube_subscribers=data.get('youtube_subscribers', 0),
             youtube_url=data.get('youtube_url'),
 
-            tiktok_handle=data.get('tiktok_handle'),
-            tiktok_followers=data.get('tiktok_followers', 0),
-            tiktok_url=data.get('tiktok_url'),
+            facebook_handle=data.get('facebook_handle'),
+            facebook_followers=data.get('facebook_followers', 0),
+            facebook_url=data.get('facebook_url'),
 
             twitter_handle=data.get('twitter_handle'),
             twitter_followers=data.get('twitter_followers', 0),
             twitter_url=data.get('twitter_url'),
+
+            linkedin_handle=data.get('linkedin_handle'),
+            linkedin_followers=data.get('linkedin_followers', 0),
+            linkedin_url=data.get('linkedin_url'),
+            rate_per_post_linkedin=data.get('rate_per_post_linkedin'),
 
             rate_per_post_instagram=data.get('rate_per_post_instagram'),
             rate_per_reel_instagram=data.get('rate_per_reel_instagram'),
             rate_per_story_instagram=data.get('rate_per_story_instagram'),
             rate_per_video_youtube=data.get('rate_per_video_youtube'),
             rate_per_short_youtube=data.get('rate_per_short_youtube'),
+            rate_per_post_facebook=data.get('rate_per_post_facebook'),
+            rate_per_reel_facebook=data.get('rate_per_reel_facebook'),
+            rate_per_story_facebook=data.get('rate_per_story_facebook'),
             currency=data.get('currency', 'INR'),
 
             past_brands=data.get('past_brands', []),
@@ -1381,12 +1405,12 @@ def update_influencer(user, influencer_id):
         if 'youtube_url' in data:
             influencer.youtube_url = data['youtube_url']
 
-        if 'tiktok_handle' in data:
-            influencer.tiktok_handle = data['tiktok_handle']
-        if 'tiktok_followers' in data:
-            influencer.tiktok_followers = data['tiktok_followers']
-        if 'tiktok_url' in data:
-            influencer.tiktok_url = data['tiktok_url']
+        if 'facebook_handle' in data:
+            influencer.facebook_handle = data['facebook_handle']
+        if 'facebook_followers' in data:
+            influencer.facebook_followers = data['facebook_followers']
+        if 'facebook_url' in data:
+            influencer.facebook_url = data['facebook_url']
 
         if 'twitter_handle' in data:
             influencer.twitter_handle = data['twitter_handle']
@@ -1394,6 +1418,15 @@ def update_influencer(user, influencer_id):
             influencer.twitter_followers = data['twitter_followers']
         if 'twitter_url' in data:
             influencer.twitter_url = data['twitter_url']
+
+        if 'linkedin_handle' in data:
+            influencer.linkedin_handle = data['linkedin_handle']
+        if 'linkedin_followers' in data:
+            influencer.linkedin_followers = data['linkedin_followers']
+        if 'linkedin_url' in data:
+            influencer.linkedin_url = data['linkedin_url']
+        if 'rate_per_post_linkedin' in data:
+            influencer.rate_per_post_linkedin = data['rate_per_post_linkedin']
 
         # Rate card
         if 'rate_per_post_instagram' in data:
@@ -1406,6 +1439,12 @@ def update_influencer(user, influencer_id):
             influencer.rate_per_video_youtube = data['rate_per_video_youtube']
         if 'rate_per_short_youtube' in data:
             influencer.rate_per_short_youtube = data['rate_per_short_youtube']
+        if 'rate_per_post_facebook' in data:
+            influencer.rate_per_post_facebook = data['rate_per_post_facebook']
+        if 'rate_per_reel_facebook' in data:
+            influencer.rate_per_reel_facebook = data['rate_per_reel_facebook']
+        if 'rate_per_story_facebook' in data:
+            influencer.rate_per_story_facebook = data['rate_per_story_facebook']
         if 'currency' in data:
             influencer.currency = data['currency']
 

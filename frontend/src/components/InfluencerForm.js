@@ -40,10 +40,19 @@ function InfluencerForm() {
     rate_per_video_youtube: '',
     rate_per_short_youtube: '',
 
-    // TikTok
-    tiktok_handle: '',
-    tiktok_followers: '',
-    tiktok_url: '',
+    // Facebook
+    facebook_handle: '',
+    facebook_followers: '',
+    facebook_url: '',
+    rate_per_post_facebook: '',
+    rate_per_reel_facebook: '',
+    rate_per_story_facebook: '',
+
+    // LinkedIn
+    linkedin_handle: '',
+    linkedin_followers: '',
+    linkedin_url: '',
+    rate_per_post_linkedin: '',
 
     // Twitter
     twitter_handle: '',
@@ -73,7 +82,7 @@ function InfluencerForm() {
   const fetchInfluencer = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/influencers/${id}`);
+      const response = await axios.get(`/influencers/${id}`);
       const inf = response.data;
 
       setFormData({
@@ -99,9 +108,17 @@ function InfluencerForm() {
         rate_per_video_youtube: inf.rate_per_video_youtube || '',
         rate_per_short_youtube: inf.rate_per_short_youtube || '',
 
-        tiktok_handle: inf.tiktok_handle || '',
-        tiktok_followers: inf.tiktok_followers || '',
-        tiktok_url: inf.tiktok_url || '',
+        facebook_handle: inf.facebook_handle || '',
+        facebook_followers: inf.facebook_followers || '',
+        facebook_url: inf.facebook_url || '',
+        rate_per_post_facebook: inf.rate_per_post_facebook || '',
+        rate_per_reel_facebook: inf.rate_per_reel_facebook || '',
+        rate_per_story_facebook: inf.rate_per_story_facebook || '',
+
+        linkedin_handle: inf.linkedin_handle || '',
+        linkedin_followers: inf.linkedin_followers || '',
+        linkedin_url: inf.linkedin_url || '',
+        rate_per_post_linkedin: inf.rate_per_post_linkedin || '',
 
         twitter_handle: inf.twitter_handle || '',
         twitter_followers: inf.twitter_followers || '',
@@ -149,13 +166,18 @@ function InfluencerForm() {
         ...formData,
         instagram_followers: parseInt(formData.instagram_followers) || 0,
         youtube_subscribers: parseInt(formData.youtube_subscribers) || 0,
-        tiktok_followers: parseInt(formData.tiktok_followers) || 0,
+        facebook_followers: parseInt(formData.facebook_followers) || 0,
+        linkedin_followers: parseInt(formData.linkedin_followers) || 0,
         twitter_followers: parseInt(formData.twitter_followers) || 0,
         rate_per_post_instagram: parseFloat(formData.rate_per_post_instagram) || null,
         rate_per_reel_instagram: parseFloat(formData.rate_per_reel_instagram) || null,
         rate_per_story_instagram: parseFloat(formData.rate_per_story_instagram) || null,
         rate_per_video_youtube: parseFloat(formData.rate_per_video_youtube) || null,
         rate_per_short_youtube: parseFloat(formData.rate_per_short_youtube) || null,
+        rate_per_post_facebook: parseFloat(formData.rate_per_post_facebook) || null,
+        rate_per_reel_facebook: parseFloat(formData.rate_per_reel_facebook) || null,
+        rate_per_story_facebook: parseFloat(formData.rate_per_story_facebook) || null,
+        rate_per_post_linkedin: parseFloat(formData.rate_per_post_linkedin) || null,
         categories: formData.categories.split(',').map(c => c.trim()).filter(Boolean),
         past_brands: formData.past_brands.split(',').map(b => b.trim()).filter(Boolean)
       };
@@ -516,22 +538,22 @@ function InfluencerForm() {
           </div>
         </div>
 
-        {/* TikTok */}
+        {/* Facebook */}
         <div className="form-section">
           <h2 className="section-title">
-            <span className="platform-icon">🎵</span>
-            TikTok
+            <span className="platform-icon">📘</span>
+            Facebook
           </h2>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Handle</label>
+              <label>Page Name</label>
               <input
                 type="text"
-                name="tiktok_handle"
-                value={formData.tiktok_handle}
+                name="facebook_handle"
+                value={formData.facebook_handle}
                 onChange={handleChange}
-                placeholder="@username"
+                placeholder="Page Name"
               />
             </div>
 
@@ -539,10 +561,86 @@ function InfluencerForm() {
               <label>Followers</label>
               <input
                 type="number"
-                name="tiktok_followers"
-                value={formData.tiktok_followers}
+                name="facebook_followers"
+                value={formData.facebook_followers}
                 onChange={handleChange}
-                placeholder="80000"
+                placeholder="50000"
+              />
+            </div>
+
+            <div className="form-group full-width">
+              <label>Page URL</label>
+              <input
+                type="url"
+                name="facebook_url"
+                value={formData.facebook_url}
+                onChange={handleChange}
+                placeholder="https://facebook.com/pagename"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Rate per Post ({formData.currency})</label>
+              <input
+                type="number"
+                name="rate_per_post_facebook"
+                value={formData.rate_per_post_facebook}
+                onChange={handleChange}
+                placeholder="25000"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Rate per Reel ({formData.currency})</label>
+              <input
+                type="number"
+                name="rate_per_reel_facebook"
+                value={formData.rate_per_reel_facebook}
+                onChange={handleChange}
+                placeholder="35000"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Rate per Story ({formData.currency})</label>
+              <input
+                type="number"
+                name="rate_per_story_facebook"
+                value={formData.rate_per_story_facebook}
+                onChange={handleChange}
+                placeholder="10000"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* LinkedIn */}
+        <div className="form-section">
+          <h2 className="section-title">
+            <span className="platform-icon">💼</span>
+            LinkedIn
+          </h2>
+
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Profile Name</label>
+              <input
+                type="text"
+                name="linkedin_handle"
+                value={formData.linkedin_handle}
+                onChange={handleChange}
+                placeholder="Profile Name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Followers</label>
+              <input
+                type="number"
+                name="linkedin_followers"
+                value={formData.linkedin_followers}
+                onChange={handleChange}
+                placeholder="10000"
               />
             </div>
 
@@ -550,10 +648,21 @@ function InfluencerForm() {
               <label>Profile URL</label>
               <input
                 type="url"
-                name="tiktok_url"
-                value={formData.tiktok_url}
+                name="linkedin_url"
+                value={formData.linkedin_url}
                 onChange={handleChange}
-                placeholder="https://tiktok.com/@username"
+                placeholder="https://linkedin.com/in/username"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Rate per Post ({formData.currency})</label>
+              <input
+                type="number"
+                name="rate_per_post_linkedin"
+                value={formData.rate_per_post_linkedin}
+                onChange={handleChange}
+                placeholder="15000"
               />
             </div>
           </div>
