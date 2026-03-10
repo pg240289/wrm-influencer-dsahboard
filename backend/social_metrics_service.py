@@ -242,214 +242,291 @@ class YouTubeFetcher(BaseFetcher):
             return None
 
 
-# ==================== COMMENTED OUT - INSTAGRAM FETCHER ====================
-# class InstagramFetcher(BaseFetcher):
-#     """Fetcher for Instagram post/reel metrics using Facebook Graph API"""
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.access_token = os.getenv('INSTAGRAM_ACCESS_TOKEN')
-#         self.ig_business_account_id = os.getenv('INSTAGRAM_BUSINESS_ACCOUNT_ID')
-#         self.base_url = 'https://graph.facebook.com/v18.0'
-#
-#     def is_configured(self):
-#         return bool(self.access_token)
-#
-#     def extract_shortcode(self, url):
-#         if not url:
-#             return None
-#         patterns = [
-#             r'instagram\.com\/p\/([a-zA-Z0-9_-]+)',
-#             r'instagram\.com\/reel\/([a-zA-Z0-9_-]+)',
-#             r'instagram\.com\/tv\/([a-zA-Z0-9_-]+)',
-#         ]
-#         for pattern in patterns:
-#             match = re.search(pattern, url)
-#             if match:
-#                 return match.group(1)
-#         return None
-#
-#     def shortcode_to_media_id(self, shortcode):
-#         if not shortcode:
-#             return None
-#         alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-#         media_id = 0
-#         for char in shortcode:
-#             media_id = media_id * 64 + alphabet.index(char)
-#         return str(media_id)
-#
-#     def get_ig_media_id_from_shortcode(self, shortcode):
-#         if not self.ig_business_account_id:
-#             return self.shortcode_to_media_id(shortcode)
-#         try:
-#             response = requests.get(
-#                 f'{self.base_url}/{self.ig_business_account_id}/media',
-#                 params={'fields': 'id,shortcode,like_count,comments_count', 'access_token': self.access_token},
-#                 timeout=10
-#             )
-#             response.raise_for_status()
-#             data = response.json()
-#             for media in data.get('data', []):
-#                 if media.get('shortcode') == shortcode:
-#                     return media.get('id')
-#         except Exception as e:
-#             logger.warning(f"Could not find media ID from account: {e}")
-#         return self.shortcode_to_media_id(shortcode)
-#
-#     def fetch_metrics(self, url):
-#         if not self.is_configured():
-#             return None
-#         shortcode = self.extract_shortcode(url)
-#         if not shortcode:
-#             return None
-#         try:
-#             media_id = self.get_ig_media_id_from_shortcode(shortcode)
-#             if not media_id:
-#                 return None
-#             response = requests.get(
-#                 f'{self.base_url}/{media_id}',
-#                 params={'fields': 'like_count,comments_count,media_type,timestamp,caption', 'access_token': self.access_token},
-#                 timeout=10
-#             )
-#             if response.status_code == 200:
-#                 data = response.json()
-#                 insights_data = {}
-#                 try:
-#                     insights_response = requests.get(
-#                         f'{self.base_url}/{media_id}/insights',
-#                         params={'metric': 'impressions,reach,saved,shares', 'access_token': self.access_token},
-#                         timeout=10
-#                     )
-#                     if insights_response.status_code == 200:
-#                         insights = insights_response.json().get('data', [])
-#                         for insight in insights:
-#                             insights_data[insight['name']] = insight['values'][0]['value']
-#                 except Exception as e:
-#                     logger.debug(f"Could not fetch insights: {e}")
-#                 return {
-#                     'views': insights_data.get('impressions', 0),
-#                     'likes': data.get('like_count', 0),
-#                     'comments': data.get('comments_count', 0),
-#                     'shares': insights_data.get('shares', 0),
-#                     'saves': insights_data.get('saved', 0)
-#                 }
-#             return None
-#         except Exception as e:
-#             logger.error(f"Instagram API request failed: {e}")
-#             return None
+class InstagramFetcher(BaseFetcher):
+    """Fetcher for Instagram post/reel metrics using Facebook Graph API"""
+
+    def __init__(self):
+        super().__init__()
+        self.access_token = os.getenv('INSTAGRAM_ACCESS_TOKEN')
+        self.ig_business_account_id = os.getenv('INSTAGRAM_BUSINESS_ACCOUNT_ID')
+        self.base_url = 'https://graph.facebook.com/v18.0'
+
+    def is_configured(self):
+        return bool(self.access_token)
+
+    def extract_shortcode(self, url):
+        if not url:
+            return None
+        patterns = [
+            r'instagram\.com\/p\/([a-zA-Z0-9_-]+)',
+            r'instagram\.com\/reel\/([a-zA-Z0-9_-]+)',
+            r'instagram\.com\/tv\/([a-zA-Z0-9_-]+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        return None
+
+    def shortcode_to_media_id(self, shortcode):
+        if not shortcode:
+            return None
+        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+        media_id = 0
+        for char in shortcode:
+            media_id = media_id * 64 + alphabet.index(char)
+        return str(media_id)
+
+    def get_ig_media_id_from_shortcode(self, shortcode):
+        if not self.ig_business_account_id:
+            return self.shortcode_to_media_id(shortcode)
+        try:
+            response = requests.get(
+                f'{self.base_url}/{self.ig_business_account_id}/media',
+                params={'fields': 'id,shortcode,like_count,comments_count', 'access_token': self.access_token},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            for media in data.get('data', []):
+                if media.get('shortcode') == shortcode:
+                    return media.get('id')
+        except Exception as e:
+            logger.warning(f"Could not find media ID from account: {e}")
+        return self.shortcode_to_media_id(shortcode)
+
+    def fetch_metrics(self, url):
+        if not self.is_configured():
+            return None
+        shortcode = self.extract_shortcode(url)
+        if not shortcode:
+            return None
+        try:
+            media_id = self.get_ig_media_id_from_shortcode(shortcode)
+            if not media_id:
+                return None
+            response = requests.get(
+                f'{self.base_url}/{media_id}',
+                params={'fields': 'like_count,comments_count,media_type,timestamp,caption', 'access_token': self.access_token},
+                timeout=10
+            )
+            if response.status_code == 200:
+                data = response.json()
+                insights_data = {}
+                try:
+                    insights_response = requests.get(
+                        f'{self.base_url}/{media_id}/insights',
+                        params={'metric': 'impressions,reach,saved,shares', 'access_token': self.access_token},
+                        timeout=10
+                    )
+                    if insights_response.status_code == 200:
+                        insights = insights_response.json().get('data', [])
+                        for insight in insights:
+                            insights_data[insight['name']] = insight['values'][0]['value']
+                except Exception as e:
+                    logger.debug(f"Could not fetch insights: {e}")
+                return {
+                    'views': insights_data.get('impressions', 0),
+                    'likes': data.get('like_count', 0),
+                    'comments': data.get('comments_count', 0),
+                    'shares': insights_data.get('shares', 0),
+                    'saves': insights_data.get('saved', 0)
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Instagram API request failed: {e}")
+            return None
 
 
-# ==================== COMMENTED OUT - FACEBOOK FETCHER ====================
-# class FacebookFetcher(BaseFetcher):
-#     """Fetcher for Facebook post/video metrics using Facebook Graph API"""
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.access_token = os.getenv('FACEBOOK_ACCESS_TOKEN')
-#         self.base_url = 'https://graph.facebook.com/v18.0'
-#
-#     def is_configured(self):
-#         return bool(self.access_token)
-#
-#     def extract_post_id(self, url):
-#         if not url:
-#             return None
-#         patterns = [
-#             r'facebook\.com\/.*\/posts\/(\d+)',
-#             r'facebook\.com\/.*\/videos\/(\d+)',
-#             r'facebook\.com\/watch\/\?v=(\d+)',
-#             r'fb\.watch\/([a-zA-Z0-9_-]+)',
-#         ]
-#         for pattern in patterns:
-#             match = re.search(pattern, url)
-#             if match:
-#                 return match.group(1)
-#         return None
-#
-#     def fetch_metrics(self, url):
-#         if not self.is_configured():
-#             return None
-#         post_id = self.extract_post_id(url)
-#         if not post_id:
-#             return None
-#         try:
-#             response = requests.get(
-#                 f'{self.base_url}/{post_id}',
-#                 params={'fields': 'likes.summary(true),comments.summary(true),shares,reactions.summary(true)', 'access_token': self.access_token},
-#                 timeout=10
-#             )
-#             response.raise_for_status()
-#             data = response.json()
-#             likes = data.get('reactions', {}).get('summary', {}).get('total_count', 0)
-#             if not likes:
-#                 likes = data.get('likes', {}).get('summary', {}).get('total_count', 0)
-#             return {
-#                 'views': 0,
-#                 'likes': likes,
-#                 'comments': data.get('comments', {}).get('summary', {}).get('total_count', 0),
-#                 'shares': data.get('shares', {}).get('count', 0),
-#                 'saves': 0
-#             }
-#         except Exception as e:
-#             logger.error(f"Facebook API request failed: {e}")
-#             return None
+class FacebookFetcher(BaseFetcher):
+    """Fetcher for Facebook post/video metrics using Facebook Graph API"""
+
+    def __init__(self):
+        super().__init__()
+        self.access_token = os.getenv('FACEBOOK_ACCESS_TOKEN')
+        self.base_url = 'https://graph.facebook.com/v18.0'
+
+    def is_configured(self):
+        return bool(self.access_token)
+
+    def extract_post_id(self, url):
+        if not url:
+            return None
+        patterns = [
+            r'facebook\.com\/.*\/posts\/(\d+)',
+            r'facebook\.com\/.*\/videos\/(\d+)',
+            r'facebook\.com\/watch\/\?v=(\d+)',
+            r'fb\.watch\/([a-zA-Z0-9_-]+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        return None
+
+    def fetch_metrics(self, url):
+        if not self.is_configured():
+            return None
+        post_id = self.extract_post_id(url)
+        if not post_id:
+            return None
+        try:
+            response = requests.get(
+                f'{self.base_url}/{post_id}',
+                params={'fields': 'likes.summary(true),comments.summary(true),shares,reactions.summary(true)', 'access_token': self.access_token},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            likes = data.get('reactions', {}).get('summary', {}).get('total_count', 0)
+            if not likes:
+                likes = data.get('likes', {}).get('summary', {}).get('total_count', 0)
+            return {
+                'views': 0,
+                'likes': likes,
+                'comments': data.get('comments', {}).get('summary', {}).get('total_count', 0),
+                'shares': data.get('shares', {}).get('count', 0),
+                'saves': 0
+            }
+        except Exception as e:
+            logger.error(f"Facebook API request failed: {e}")
+            return None
 
 
-# ==================== COMMENTED OUT - LINKEDIN FETCHER ====================
-# class LinkedInFetcher(BaseFetcher):
-#     """Fetcher for LinkedIn post metrics using LinkedIn API"""
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.access_token = os.getenv('LINKEDIN_ACCESS_TOKEN')
-#         self.base_url = 'https://api.linkedin.com/v2'
-#
-#     def is_configured(self):
-#         return bool(self.access_token)
-#
-#     def extract_post_id(self, url):
-#         if not url:
-#             return None
-#         patterns = [
-#             r'linkedin\.com\/feed\/update\/urn:li:activity:(\d+)',
-#             r'linkedin\.com\/posts\/.*-(\d+)-',
-#             r'linkedin\.com\/feed\/update\/urn:li:share:(\d+)',
-#         ]
-#         for pattern in patterns:
-#             match = re.search(pattern, url)
-#             if match:
-#                 return match.group(1)
-#         return None
-#
-#     def fetch_metrics(self, url):
-#         if not self.is_configured():
-#             return None
-#         post_id = self.extract_post_id(url)
-#         if not post_id:
-#             return None
-#         try:
-#             headers = {
-#                 'Authorization': f'Bearer {self.access_token}',
-#                 'X-Restli-Protocol-Version': '2.0.0',
-#                 'LinkedIn-Version': '202304'
-#             }
-#             response = requests.get(
-#                 f'{self.base_url}/socialActions/urn:li:share:{post_id}',
-#                 headers=headers,
-#                 timeout=10
-#             )
-#             response.raise_for_status()
-#             data = response.json()
-#             return {
-#                 'views': 0,
-#                 'likes': data.get('likesSummary', {}).get('totalLikes', 0),
-#                 'comments': data.get('commentsSummary', {}).get('totalFirstLevelComments', 0),
-#                 'shares': 0,
-#                 'saves': 0
-#             }
-#         except Exception as e:
-#             logger.error(f"LinkedIn API request failed: {e}")
-#             return None
+class LinkedInFetcher(BaseFetcher):
+    """Fetcher for LinkedIn post metrics using LinkedIn API"""
+
+    def __init__(self):
+        super().__init__()
+        self.access_token = os.getenv('LINKEDIN_ACCESS_TOKEN')
+        self.base_url = 'https://api.linkedin.com/v2'
+
+    def is_configured(self):
+        return bool(self.access_token)
+
+    def extract_post_id(self, url):
+        if not url:
+            return None
+        patterns = [
+            r'linkedin\.com\/feed\/update\/urn:li:activity:(\d+)',
+            r'linkedin\.com\/posts\/.*-(\d+)-',
+            r'linkedin\.com\/feed\/update\/urn:li:share:(\d+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        return None
+
+    def fetch_metrics(self, url):
+        if not self.is_configured():
+            return None
+        post_id = self.extract_post_id(url)
+        if not post_id:
+            return None
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'X-Restli-Protocol-Version': '2.0.0',
+                'LinkedIn-Version': '202304'
+            }
+            response = requests.get(
+                f'{self.base_url}/socialActions/urn:li:share:{post_id}',
+                headers=headers,
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            return {
+                'views': 0,
+                'likes': data.get('likesSummary', {}).get('totalLikes', 0),
+                'comments': data.get('commentsSummary', {}).get('totalFirstLevelComments', 0),
+                'shares': 0,
+                'saves': 0
+            }
+        except Exception as e:
+            logger.error(f"LinkedIn API request failed: {e}")
+            return None
+
+
+class TwitterFetcher(BaseFetcher):
+    """Fetcher for Twitter/X post metrics using Twitter API v2"""
+
+    def __init__(self):
+        super().__init__()
+        self.bearer_token = os.getenv('TWITTER_BEARER_TOKEN')
+        self.base_url = 'https://api.twitter.com/2'
+
+    def is_configured(self):
+        return bool(self.bearer_token)
+
+    def extract_tweet_id(self, url):
+        """Extract tweet ID from various Twitter/X URL formats"""
+        if not url:
+            return None
+        patterns = [
+            r'(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        return None
+
+    def fetch_metrics(self, url):
+        """Fetch tweet metrics from Twitter API v2"""
+        if not self.is_configured():
+            logger.warning("Twitter Bearer Token not configured")
+            return None
+
+        tweet_id = self.extract_tweet_id(url)
+        if not tweet_id:
+            logger.warning(f"Could not extract tweet ID from URL: {url}")
+            return None
+
+        logger.info(f"Extracted tweet ID: {tweet_id} from URL: {url}")
+
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.bearer_token}'
+            }
+            params = {
+                'tweet.fields': 'public_metrics'
+            }
+
+            response = requests.get(
+                f'{self.base_url}/tweets/{tweet_id}',
+                headers=headers,
+                params=params,
+                timeout=10
+            )
+
+            logger.info(f"Twitter API response status: {response.status_code}")
+
+            response.raise_for_status()
+            data = response.json()
+
+            metrics = data.get('data', {}).get('public_metrics', {})
+            if not metrics:
+                logger.warning(f"No metrics found for tweet: {tweet_id}")
+                return None
+
+            logger.info(f"Twitter metrics for {tweet_id}: {metrics}")
+
+            return {
+                'views': int(metrics.get('impression_count', 0)),
+                'likes': int(metrics.get('like_count', 0)),
+                'comments': int(metrics.get('reply_count', 0)),
+                'shares': int(metrics.get('retweet_count', 0)) + int(metrics.get('quote_count', 0)),
+                'saves': int(metrics.get('bookmark_count', 0))
+            }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Twitter API request failed: {e}")
+            return None
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            logger.error(f"Error parsing Twitter API response: {e}")
+            return None
 
 
 # ==================== METRICS SERVICE ====================
@@ -458,12 +535,12 @@ class SocialMetricsService:
     """Main service that orchestrates metrics fetching for all platforms"""
 
     def __init__(self):
-        # Currently only YouTube is enabled
         self.fetchers = {
             'YouTube': YouTubeFetcher(),
-            # 'Instagram': InstagramFetcher(),  # Commented out
-            # 'Facebook': FacebookFetcher(),    # Commented out
-            # 'LinkedIn': LinkedInFetcher(),    # Commented out
+            'Instagram': InstagramFetcher(),
+            'Facebook': FacebookFetcher(),
+            'LinkedIn': LinkedInFetcher(),
+            'Twitter': TwitterFetcher(),
         }
 
         # Log configuration status
@@ -480,13 +557,14 @@ class SocialMetricsService:
 
         if 'youtube.com' in url_lower or 'youtu.be' in url_lower:
             return 'YouTube'
-        # Commented out - only YouTube enabled for now
-        # elif 'instagram.com' in url_lower:
-        #     return 'Instagram'
-        # elif 'facebook.com' in url_lower or 'fb.watch' in url_lower:
-        #     return 'Facebook'
-        # elif 'linkedin.com' in url_lower:
-        #     return 'LinkedIn'
+        elif 'instagram.com' in url_lower:
+            return 'Instagram'
+        elif 'facebook.com' in url_lower or 'fb.watch' in url_lower:
+            return 'Facebook'
+        elif 'linkedin.com' in url_lower:
+            return 'LinkedIn'
+        elif 'twitter.com' in url_lower or 'x.com' in url_lower:
+            return 'Twitter'
 
         return None
 

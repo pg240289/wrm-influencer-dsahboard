@@ -13,6 +13,18 @@ function InfluencerForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+
+  // Location master data
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [selectedCountryId, setSelectedCountryId] = useState('');
+  const [selectedStateId, setSelectedStateId] = useState('');
+  const [selectedCityId, setSelectedCityId] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -74,10 +86,45 @@ function InfluencerForm() {
       return;
     }
 
+    // Fetch categories and countries from API
+    axios.get('/categories').then(res => {
+      setAvailableCategories(res.data);
+    }).catch(() => {});
+
+    axios.get('/countries').then(res => {
+      setCountries(res.data);
+    }).catch(() => {});
+
     if (isEditMode) {
       fetchInfluencer();
     }
   }, [id, isEditMode]);
+
+  // Cascading: fetch states when country changes
+  useEffect(() => {
+    if (selectedCountryId) {
+      axios.get(`/states?country_id=${selectedCountryId}`).then(res => {
+        setStates(res.data);
+      }).catch(() => setStates([]));
+    } else {
+      setStates([]);
+    }
+    setSelectedStateId('');
+    setSelectedCityId('');
+    setCities([]);
+  }, [selectedCountryId]);
+
+  // Cascading: fetch cities when state changes
+  useEffect(() => {
+    if (selectedStateId) {
+      axios.get(`/cities?state_id=${selectedStateId}`).then(res => {
+        setCities(res.data);
+      }).catch(() => setCities([]));
+    } else {
+      setCities([]);
+    }
+    setSelectedCityId('');
+  }, [selectedStateId]);
 
   const fetchInfluencer = async () => {
     try {
@@ -124,13 +171,30 @@ function InfluencerForm() {
         twitter_followers: inf.twitter_followers || '',
         twitter_url: inf.twitter_url || '',
 
-        categories: (inf.categories || []).join(', '),
+        categories: '',  // managed separately via selectedCategories
         past_brands: (inf.past_brands || []).join(', '),
         worked_with_wrm: inf.worked_with_wrm || false,
         wrm_notes: inf.wrm_notes || '',
         currency: inf.currency || 'INR',
         status: inf.status || 'active'
       });
+
+      setSelectedCategories(inf.categories || []);
+
+      // Set location IDs and load dependent dropdowns
+      if (inf.country_id) {
+        setSelectedCountryId(inf.country_id);
+        const statesRes = await axios.get(`/states?country_id=${inf.country_id}`);
+        setStates(statesRes.data);
+        if (inf.state_id) {
+          setSelectedStateId(inf.state_id);
+          const citiesRes = await axios.get(`/cities?state_id=${inf.state_id}`);
+          setCities(citiesRes.data);
+          if (inf.city_id) {
+            setSelectedCityId(inf.city_id);
+          }
+        }
+      }
 
       setError(null);
     } catch (err) {
@@ -178,20 +242,36 @@ function InfluencerForm() {
         rate_per_reel_facebook: parseFloat(formData.rate_per_reel_facebook) || null,
         rate_per_story_facebook: parseFloat(formData.rate_per_story_facebook) || null,
         rate_per_post_linkedin: parseFloat(formData.rate_per_post_linkedin) || null,
-        categories: formData.categories.split(',').map(c => c.trim()).filter(Boolean),
-        past_brands: formData.past_brands.split(',').map(b => b.trim()).filter(Boolean)
+        categories: selectedCategories,
+        past_brands: formData.past_brands.split(',').map(b => b.trim()).filter(Boolean),
+        country_id: selectedCountryId || null,
+        state_id: selectedStateId || null,
+        city_id: selectedCityId || null
       };
 
+      let response;
       if (isEditMode) {
-        await axios.put(`/api/influencers/${id}`, submitData);
+        response = await axios.put(`/influencers/${id}`, submitData);
       } else {
-        await axios.post('/api/influencers', submitData);
+        response = await axios.post('/influencers', submitData);
       }
 
       setSuccess(true);
+      const data = response.data;
+      if (isEditMode) {
+        setSuccessMessage('Influencer updated successfully! Redirecting...');
+      } else if (data.email_invited && data.email_sent) {
+        setSuccessMessage('Influencer created and invitation email sent! Redirecting...');
+      } else if (data.email_invited && !data.email_sent) {
+        setSuccessMessage(`Influencer created. Email not configured. ${data.invite_link ? 'Invite link: ' + data.invite_link : ''}`);
+      } else if (data.invite_message) {
+        setSuccessMessage(data.invite_message + ' Redirecting...');
+      } else {
+        setSuccessMessage('Influencer created successfully! Redirecting...');
+      }
       setTimeout(() => {
         navigate('/influencers');
-      }, 1500);
+      }, data.invite_link ? 5000 : 1500);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save influencer');
       console.error(err);
@@ -247,7 +327,7 @@ function InfluencerForm() {
               <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/>
               <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Influencer saved successfully! Redirecting...
+            {successMessage || 'Influencer saved successfully! Redirecting...'}
           </div>
         )}
 
@@ -339,14 +419,61 @@ function InfluencerForm() {
 
             <div className="form-group full-width">
               <label>Categories</label>
-              <input
-                type="text"
-                name="categories"
-                value={formData.categories}
-                onChange={handleChange}
-                placeholder="Fashion, Lifestyle, Beauty (comma-separated)"
-              />
-              <span className="field-hint">Separate multiple categories with commas</span>
+              <div style={{ position: 'relative' }}>
+                <div
+                  onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                  style={{
+                    border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px 12px',
+                    cursor: 'pointer', minHeight: '42px', background: 'white',
+                    display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center'
+                  }}
+                >
+                  {selectedCategories.length === 0 ? (
+                    <span style={{ color: '#9ca3af' }}>Select categories...</span>
+                  ) : (
+                    selectedCategories.map(cat => (
+                      <span key={cat} style={{
+                        background: '#eef2ff', color: '#4338ca', padding: '2px 8px',
+                        borderRadius: '12px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px'
+                      }}>
+                        {cat}
+                        <span
+                          onClick={(e) => { e.stopPropagation(); setSelectedCategories(prev => prev.filter(c => c !== cat)); }}
+                          style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+                        >x</span>
+                      </span>
+                    ))
+                  )}
+                </div>
+                {categoryDropdownOpen && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                    background: 'white', border: '1px solid #d1d5db', borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto', marginTop: '4px'
+                  }}>
+                    {availableCategories.map(cat => (
+                      <label key={cat.id} style={{
+                        display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+                        cursor: 'pointer', fontSize: '14px', borderBottom: '1px solid #f3f4f6'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(cat.name)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCategories(prev => [...prev, cat.name]);
+                            } else {
+                              setSelectedCategories(prev => prev.filter(c => c !== cat.name));
+                            }
+                          }}
+                        />
+                        {cat.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="field-hint">Select one or more categories</span>
             </div>
           </div>
         </div>
@@ -363,36 +490,44 @@ function InfluencerForm() {
 
           <div className="form-grid">
             <div className="form-group">
-              <label>City</label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Mumbai"
-              />
+              <label>Country</label>
+              <select
+                value={selectedCountryId}
+                onChange={(e) => setSelectedCountryId(e.target.value ? parseInt(e.target.value) : '')}
+              >
+                <option value="">Select Country</option>
+                {countries.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
               <label>State</label>
-              <input
-                type="text"
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                placeholder="Maharashtra"
-              />
+              <select
+                value={selectedStateId}
+                onChange={(e) => setSelectedStateId(e.target.value ? parseInt(e.target.value) : '')}
+                disabled={!selectedCountryId}
+              >
+                <option value="">Select State</option>
+                {states.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
-              <label>Country</label>
-              <input
-                type="text"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                placeholder="India"
-              />
+              <label>City</label>
+              <select
+                value={selectedCityId}
+                onChange={(e) => setSelectedCityId(e.target.value ? parseInt(e.target.value) : '')}
+                disabled={!selectedStateId}
+              >
+                <option value="">Select City</option>
+                {cities.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

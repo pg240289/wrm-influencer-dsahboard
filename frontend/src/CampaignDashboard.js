@@ -41,7 +41,16 @@ function CampaignDashboard() {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) return <div className="loading">Loading campaigns...</div>;
+  const formatNumber = (num) => {
+    return num.toLocaleString();
+  };
+
+  if (loading) return (
+    <div className="loading">
+      <div className="loading-spinner"></div>
+      Loading campaigns...
+    </div>
+  );
   if (error) return <div className="error">{error}</div>;
 
   const totalInfluencers = campaigns.reduce((sum, c) => sum + c.num_influencers, 0);
@@ -97,6 +106,20 @@ function CampaignDashboard() {
               </svg>
               Influencer Master
             </button>
+            {isManager() && (
+              <button
+                className="btn-secondary-header"
+                onClick={() => navigate('/masters')}
+              >
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                Masters
+              </button>
+            )}
             {isAdmin() && (
               <button
                 className="btn-secondary-header"
@@ -136,7 +159,7 @@ function CampaignDashboard() {
           </div>
           <div className="stat-content">
             <div className="stat-label">Total Campaigns</div>
-            <div className="stat-value">{campaigns.length}</div>
+            <div className="stat-value">{formatNumber(campaigns.length)}</div>
             <div className="stat-change positive">All campaigns</div>
           </div>
         </div>
@@ -149,7 +172,7 @@ function CampaignDashboard() {
           </div>
           <div className="stat-content">
             <div className="stat-label">Active Campaigns</div>
-            <div className="stat-value">{activeCampaigns}</div>
+            <div className="stat-value">{formatNumber(activeCampaigns)}</div>
             <div className="stat-change positive">{completedCampaigns} completed</div>
           </div>
         </div>
@@ -163,7 +186,7 @@ function CampaignDashboard() {
           </div>
           <div className="stat-content">
             <div className="stat-label">Total Influencers</div>
-            <div className="stat-value">{totalInfluencers}</div>
+            <div className="stat-value">{formatNumber(totalInfluencers)}</div>
             <div className="stat-change">Across all campaigns</div>
           </div>
         </div>
@@ -176,7 +199,7 @@ function CampaignDashboard() {
           </div>
           <div className="stat-content">
             <div className="stat-label">Content Pieces</div>
-            <div className="stat-value">{totalContent}</div>
+            <div className="stat-value">{formatNumber(totalContent)}</div>
             <div className="stat-change">Total deliverables</div>
           </div>
         </div>
@@ -302,7 +325,13 @@ function CampaignDashboard() {
 
         {filteredCampaigns.length === 0 && (
           <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
             <p>No campaigns found</p>
+            <span className="empty-state-hint">Try adjusting your search or filter criteria</span>
           </div>
         )}
       </div>

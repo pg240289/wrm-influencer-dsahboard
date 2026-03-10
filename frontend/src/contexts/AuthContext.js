@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       const { token: newToken, user: userData } = response.data;
       setToken(newToken);
       setUser(userData);
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       return {
         success: false,
@@ -111,8 +111,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = () => hasRole('Admin');
-  const isManager = () => hasRole('Manager') || isAdmin();
-  const isViewer = () => hasRole('Viewer') || isManager();
+  const isCampaignManager = () => hasRole('Campaign Manager') || isAdmin();
+  const isCampaignExecutor = () => hasRole('Campaign Executor') || isCampaignManager();
+  const isInfluencer = () => hasRole('Influencer');
+
+  // Backward compatibility
+  const isManager = () => isCampaignManager();
+  const isViewer = () => isCampaignExecutor();
 
   const value = {
     user,
@@ -127,7 +132,10 @@ export const AuthProvider = ({ children }) => {
     hasAnyRole,
     isAdmin,
     isManager,
-    isViewer
+    isViewer,
+    isCampaignManager,
+    isCampaignExecutor,
+    isInfluencer
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

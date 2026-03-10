@@ -492,6 +492,24 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+.content-links-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-left: 24px;
+}
+
+.content-link-row-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.content-link-row-form .platform-link-input {
+  margin-top: 0;
+}
+
 .selection-summary {
   margin-top: 16px;
   padding: 12px;

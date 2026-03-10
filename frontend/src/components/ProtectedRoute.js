@@ -19,11 +19,26 @@ function ProtectedRoute({ children, requiredRole = null, requiredAnyRole = null 
 
   // Check role requirements
   if (requiredRole && !hasRole(requiredRole)) {
+    // Redirect influencers to their dashboard instead of /
+    if (hasRole('Influencer')) {
+      return <Navigate to="/influencer/dashboard" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
   if (requiredAnyRole && !hasAnyRole(requiredAnyRole)) {
+    if (hasRole('Influencer')) {
+      return <Navigate to="/influencer/dashboard" replace />;
+    }
     return <Navigate to="/" replace />;
+  }
+
+  // Redirect influencer users away from main dashboard to their own
+  if (!requiredRole && !requiredAnyRole && hasRole('Influencer') && !hasRole('Admin') && !hasRole('Campaign Manager') && !hasRole('Campaign Executor')) {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/') {
+      return <Navigate to="/influencer/dashboard" replace />;
+    }
   }
 
   return children;

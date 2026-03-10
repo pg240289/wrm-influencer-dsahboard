@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from './contexts/AuthContext';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './CampaignDetail.css';
 
 // Utility functions
 const formatNumber = (num) => {
+  if (num == null) return '0';
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  if(num)
-   return num.toString(); 
-  else 
-  return null;
+  return num.toString();
 };
 
 const formatDate = (dateString) => {
@@ -43,6 +42,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 function CampaignDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isCampaignManager, isCampaignExecutor } = useAuth();
   const [campaign, setCampaign] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [activeTab, setActiveTab] = useState('graph');
@@ -52,6 +52,27 @@ function CampaignDetail() {
   const [likesMode, setLikesMode] = useState('cumulative');
   const [commentsMode, setCommentsMode] = useState('cumulative');
 
+  // Add influencer state
+  const [showAddInfluencer, setShowAddInfluencer] = useState(false);
+  const [availableInfluencers, setAvailableInfluencers] = useState([]);
+  const [selectedInfluencerId, setSelectedInfluencerId] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [addingInfluencer, setAddingInfluencer] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [actionError, setActionError] = useState('');
+
+  // Content link management
+  const [addingContentFor, setAddingContentFor] = useState(null); // assignment_id
+  const [newContentUrl, setNewContentUrl] = useState('');
+  const [newContentType, setNewContentType] = useState('Post');
+  const [editingContentId, setEditingContentId] = useState(null);
+  const [editContentUrl, setEditContentUrl] = useState('');
+
+  // Date filter for analytics
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
   useEffect(() => {
     fetchCampaignData();
   }, [id]);
@@ -60,11 +81,20 @@ function CampaignDetail() {
     try {
       setLoading(true);
       setError(null);
-      const [campaignRes, analyticsRes] = await Promise.all([
-        axios.get(`/campaigns/${id}`),
-        axios.get(`/campaigns/${id}/analytics`)
-      ]);
-      setCampaign(campaignRes.data);
+      const campaignRes = await axios.get(`/campaigns/${id}`);
+      const campaignData = campaignRes.data;
+      setCampaign(campaignData);
+
+      // Set default date filters: campaign start_date to today
+      const today = new Date().toISOString().split('T')[0];
+      const startDate = campaignData.start_date || today;
+      setFilterStartDate(startDate);
+      setFilterEndDate(today);
+
+      // Fetch analytics with default date range
+      const analyticsRes = await axios.get(`/campaigns/${id}/analytics`, {
+        params: { start_date: startDate, end_date: today }
+      });
       setAnalytics(analyticsRes.data);
       setLoading(false);
     } catch (err) {
@@ -77,6 +107,127 @@ function CampaignDetail() {
         setError('Failed to load campaign data. Please try again.');
       }
       setLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async (startDate, endDate) => {
+    try {
+      setAnalyticsLoading(true);
+      const params = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      const res = await axios.get(`/campaigns/${id}/analytics`, { params });
+      setAnalytics(res.data);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const handleStartDateChange = (e) => {
+    const val = e.target.value;
+    setFilterStartDate(val);
+    if (val && filterEndDate) {
+      fetchAnalytics(val, filterEndDate);
+    }
+  };
+
+  const handleEndDateChange = (e) => {
+    const val = e.target.value;
+    setFilterEndDate(val);
+    if (filterStartDate && val) {
+      fetchAnalytics(filterStartDate, val);
+    }
+  };
+
+  const fetchAvailableInfluencers = async () => {
+    try {
+      const res = await axios.get('/influencers', { params: { status: 'active', for_campaign: true } });
+      setAvailableInfluencers(res.data);
+    } catch (err) {
+      setAvailableInfluencers([]);
+    }
+  };
+
+  const handleAddInfluencer = async () => {
+    if (!selectedInfluencerId || !selectedPlatform) return;
+    setAddingInfluencer(true);
+    try {
+      await axios.post(`/campaigns/${id}/influencers`, {
+        influencer_id: parseInt(selectedInfluencerId),
+        platform: selectedPlatform
+      });
+      setActionSuccess('Influencer added successfully');
+      setSelectedInfluencerId('');
+      setSelectedPlatform('');
+      setShowAddInfluencer(false);
+      fetchCampaignData();
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to add influencer');
+      setTimeout(() => setActionError(''), 3000);
+    }
+    setAddingInfluencer(false);
+  };
+
+  const handleAddContent = async (assignmentId) => {
+    if (!newContentUrl.trim()) return;
+    try {
+      await axios.post(`/campaigns/${id}/influencers/${assignmentId}/content`, {
+        url: newContentUrl,
+        content_type: newContentType
+      });
+      setAddingContentFor(null);
+      setNewContentUrl('');
+      setNewContentType('Post');
+      setActionSuccess('Content link added');
+      fetchCampaignData();
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to add content');
+      setTimeout(() => setActionError(''), 3000);
+    }
+  };
+
+  const handleUpdateContent = async (contentId) => {
+    if (!editContentUrl.trim()) return;
+    try {
+      await axios.put(`/campaigns/${id}/content/${contentId}`, { url: editContentUrl });
+      setEditingContentId(null);
+      setEditContentUrl('');
+      setActionSuccess('Content link updated');
+      fetchCampaignData();
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to update content');
+      setTimeout(() => setActionError(''), 3000);
+    }
+  };
+
+  const handleDeleteContent = async (contentId) => {
+    if (!window.confirm('Delete this content link?')) return;
+    try {
+      await axios.delete(`/campaigns/${id}/content/${contentId}`);
+      setActionSuccess('Content link deleted');
+      fetchCampaignData();
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to delete content');
+      setTimeout(() => setActionError(''), 3000);
+    }
+  };
+
+  const handleRemoveInfluencer = async (assignmentId) => {
+    if (!window.confirm('Remove this influencer from the campaign?')) return;
+    try {
+      await axios.delete(`/campaigns/${id}/influencers/${assignmentId}`);
+      setActionSuccess('Influencer removed');
+      fetchCampaignData();
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to remove influencer');
+      setTimeout(() => setActionError(''), 3000);
     }
   };
 
@@ -271,24 +422,49 @@ function CampaignDetail() {
         </div>
       </div>
 
+      {/* Date Filter - shown for analytics tabs */}
+      {(activeTab === 'graph' || activeTab === 'timeline' || activeTab === 'top-performers') && (
+        <div className="date-filter-bar">
+          <div className="date-filter-group">
+            <label htmlFor="filter-start">From</label>
+            <input
+              id="filter-start"
+              type="date"
+              value={filterStartDate}
+              onChange={handleStartDateChange}
+            />
+          </div>
+          <div className="date-filter-group">
+            <label htmlFor="filter-end">To</label>
+            <input
+              id="filter-end"
+              type="date"
+              value={filterEndDate}
+              onChange={handleEndDateChange}
+            />
+          </div>
+          {analyticsLoading && <span className="analytics-loading-indicator">Loading...</span>}
+        </div>
+      )}
+
       {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'graph' && (
           <div className="graph-section">
             <h3 className="section-title">Stats Graphs</h3>
-            
+
             {/* Views Chart */}
             <div className="chart-card">
               <div className="chart-header">
                 <h4>Views</h4>
                 <div className="chart-toggle">
-                  <button 
+                  <button
                     className={viewsMode === 'cumulative' ? 'toggle-active' : ''}
                     onClick={() => setViewsMode('cumulative')}
                   >
                     Cumulative
                   </button>
-                  <button 
+                  <button
                     className={viewsMode === 'daily' ? 'toggle-active' : ''}
                     onClick={() => setViewsMode('daily')}
                   >
@@ -296,37 +472,52 @@ function CampaignDetail() {
                   </button>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                {getChartData(viewsMode, 'views').length > 0 ? (
-                  <LineChart data={getChartData(viewsMode, 'views')}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#999" 
+              {getChartData(viewsMode, 'views').length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={getChartData(viewsMode, 'views')}>
+                    <defs>
+                      <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#667eea" stopOpacity={0.15}/>
+                        <stop offset="95%" stopColor="#667eea" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#999"
                       fontSize={12}
                       tickFormatter={(value) => formatDate(value)}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <YAxis 
-                      stroke="#999" 
+                    <YAxis
+                      stroke="#999"
                       fontSize={12}
                       tickFormatter={(value) => formatNumber(value)}
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="views" 
-                      stroke="#E94196" 
-                      strokeWidth={2} 
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
+                    <Area
+                      type="monotone"
+                      dataKey="views"
+                      stroke="#667eea"
+                      strokeWidth={2.5}
+                      fill="url(#viewsGradient)"
+                      dot={{ r: 4, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }}
                     />
-                  </LineChart>
-                ) : (
-                  <div className="chart-empty-state">
-                    <p>No data available for this period</p>
-                  </div>
-                )}
-              </ResponsiveContainer>
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="chart-no-data">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3v18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M7 16l4-6 4 4 5-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <p>No views data available for this period</p>
+                </div>
+              )}
             </div>
 
             {/* Likes and Comments Charts */}
@@ -335,13 +526,13 @@ function CampaignDetail() {
                 <div className="chart-header">
                   <h4>Likes</h4>
                   <div className="chart-toggle">
-                    <button 
+                    <button
                       className={likesMode === 'cumulative' ? 'toggle-active' : ''}
                       onClick={() => setLikesMode('cumulative')}
                     >
                       Cumulative
                     </button>
-                    <button 
+                    <button
                       className={likesMode === 'daily' ? 'toggle-active' : ''}
                       onClick={() => setLikesMode('daily')}
                     >
@@ -349,50 +540,61 @@ function CampaignDetail() {
                     </button>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  {getChartData(likesMode, 'likes').length > 0 ? (
-                    <LineChart data={getChartData(likesMode, 'likes')}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#999" 
-                        fontSize={12}
+                {getChartData(likesMode, 'likes').length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={getChartData(likesMode, 'likes')}>
+                      <defs>
+                        <linearGradient id="likesGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#E94196" stopOpacity={0.15}/>
+                          <stop offset="95%" stopColor="#E94196" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        stroke="#999"
+                        fontSize={11}
                         tickFormatter={(value) => formatDate(value)}
+                        axisLine={false}
+                        tickLine={false}
                       />
-                      <YAxis 
-                        stroke="#999" 
-                        fontSize={12}
+                      <YAxis
+                        stroke="#999"
+                        fontSize={11}
                         tickFormatter={(value) => formatNumber(value)}
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="likes" 
-                        stroke="#E94196" 
-                        strokeWidth={2} 
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
+                      <Area
+                        type="monotone"
+                        dataKey="likes"
+                        stroke="#E94196"
+                        strokeWidth={2.5}
+                        fill="url(#likesGradient)"
+                        dot={{ r: 3, fill: '#E94196', strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 5, fill: '#E94196', strokeWidth: 2, stroke: '#fff' }}
                       />
-                    </LineChart>
-                  ) : (
-                    <div className="chart-empty-state">
-                      <p>No data available</p>
-                    </div>
-                  )}
-                </ResponsiveContainer>
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="chart-no-data">
+                    <p>No likes data available</p>
+                  </div>
+                )}
               </div>
 
               <div className="chart-card half">
                 <div className="chart-header">
                   <h4>Comments</h4>
                   <div className="chart-toggle">
-                    <button 
+                    <button
                       className={commentsMode === 'cumulative' ? 'toggle-active' : ''}
                       onClick={() => setCommentsMode('cumulative')}
                     >
                       Cumulative
                     </button>
-                    <button 
+                    <button
                       className={commentsMode === 'daily' ? 'toggle-active' : ''}
                       onClick={() => setCommentsMode('daily')}
                     >
@@ -400,37 +602,48 @@ function CampaignDetail() {
                     </button>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  {getChartData(commentsMode, 'comments').length > 0 ? (
-                    <LineChart data={getChartData(commentsMode, 'comments')}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#999" 
-                        fontSize={12}
+                {getChartData(commentsMode, 'comments').length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={getChartData(commentsMode, 'comments')}>
+                      <defs>
+                        <linearGradient id="commentsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        stroke="#999"
+                        fontSize={11}
                         tickFormatter={(value) => formatDate(value)}
+                        axisLine={false}
+                        tickLine={false}
                       />
-                      <YAxis 
-                        stroke="#999" 
-                        fontSize={12}
+                      <YAxis
+                        stroke="#999"
+                        fontSize={11}
                         tickFormatter={(value) => formatNumber(value)}
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="comments" 
-                        stroke="#E94196" 
-                        strokeWidth={2} 
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
+                      <Area
+                        type="monotone"
+                        dataKey="comments"
+                        stroke="#10b981"
+                        strokeWidth={2.5}
+                        fill="url(#commentsGradient)"
+                        dot={{ r: 3, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
                       />
-                    </LineChart>
-                  ) : (
-                    <div className="chart-empty-state">
-                      <p>No data available</p>
-                    </div>
-                  )}
-                </ResponsiveContainer>
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="chart-no-data">
+                    <p>No comments data available</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -451,26 +664,34 @@ function CampaignDetail() {
               )}
             </div>
             <div className="chart-card">
-              <ResponsiveContainer width="100%" height={400}>
-                {analytics.daily_metrics && analytics.daily_metrics.length > 0 ? (
+              {analytics.daily_metrics && analytics.daily_metrics.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={analytics.daily_metrics}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#999" 
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#667eea" stopOpacity={1}/>
+                        <stop offset="100%" stopColor="#764ba2" stopOpacity={0.8}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#999"
                       fontSize={12}
                       tickFormatter={(value) => formatDate(value)}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <YAxis stroke="#999" fontSize={12} />
+                    <YAxis stroke="#999" fontSize={12} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="content_count" fill="#E94196" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="content_count" fill="url(#barGradient)" radius={[8, 8, 0, 0]} />
                   </BarChart>
-                ) : (
-                  <div className="chart-empty-state">
-                    <p>No publishing data available</p>
-                  </div>
-                )}
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              ) : (
+                <div className="chart-no-data">
+                  <p>No publishing data available</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -483,7 +704,7 @@ function CampaignDetail() {
                 {analytics.top_performers.slice(0, 6).map((content, idx) => (
                 <div key={content.id} className="content-card">
                   <div className="content-thumbnail">
-                    <img src={content.thumbnail || 'https://via.placeholder.com/400x300'} alt="" />
+                    <img src={content.thumbnail || 'https://placehold.co/400x300'} alt="" />
                     <div className="content-overlay">
                       <div className="rank-badge">{idx + 1}</div>
                     </div>
@@ -533,61 +754,138 @@ function CampaignDetail() {
 
         {activeTab === 'influencers' && (
           <div className="influencers-section">
-            <h3 className="section-title">Influencers ({campaign.influencers.length})</h3>
+            <div className="section-header-row">
+              <h3 className="section-title">Influencers ({(campaign.influencers || []).length})</h3>
+              {isCampaignExecutor() && (
+                <button className="btn-add-influencer" onClick={() => { setShowAddInfluencer(!showAddInfluencer); if (!showAddInfluencer) fetchAvailableInfluencers(); }}>
+                  {showAddInfluencer ? 'Cancel' : '+ Add Influencer'}
+                </button>
+              )}
+            </div>
+
+            {actionSuccess && <div className="action-alert action-alert-success">{actionSuccess}</div>}
+            {actionError && <div className="action-alert action-alert-error">{actionError}</div>}
+
+            {showAddInfluencer && (
+              <div className="add-influencer-form">
+                <select value={selectedInfluencerId} onChange={(e) => setSelectedInfluencerId(e.target.value)}>
+                  <option value="">Select Influencer</option>
+                  {availableInfluencers.map(inf => (
+                    <option key={inf.id} value={inf.id}>{inf.name} ({inf.tier || 'N/A'})</option>
+                  ))}
+                </select>
+                <select value={selectedPlatform} onChange={(e) => setSelectedPlatform(e.target.value)}>
+                  <option value="">Select Platform</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="X (Twitter)">X (Twitter)</option>
+                  <option value="LinkedIn">LinkedIn</option>
+                </select>
+                <button className="btn-save-action" onClick={handleAddInfluencer} disabled={addingInfluencer || !selectedInfluencerId || !selectedPlatform}>
+                  {addingInfluencer ? 'Adding...' : 'Add'}
+                </button>
+              </div>
+            )}
+
             {campaign.influencers && campaign.influencers.length > 0 ? (
-              <div className="influencers-table-wrapper">
-                <table className="modern-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Platform</th>
-                      <th>Followers</th>
-                      <th>Content</th>
-                      <th>Views</th>
-                      <th>Likes</th>
-                      <th>Comments</th>
-                      <th>Engagement</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {campaign.influencers.map((influencer, idx) => {
-                      const infEngagement = influencer.total_views > 0
-                        ? ((influencer.total_likes + influencer.total_comments) / influencer.total_views * 100).toFixed(2)
-                        : '0.00';
-                      return (
-                    <tr key={influencer.id}>
-                      <td>{idx + 1}</td>
-                      <td>
+              <div className="influencer-assignments-list">
+                {campaign.influencers.map((influencer, idx) => {
+                  const infEngagement = influencer.total_views > 0
+                    ? ((influencer.total_likes + influencer.total_comments) / influencer.total_views * 100).toFixed(2)
+                    : '0.00';
+                  const contentLinks = influencer.content_links || [];
+                  return (
+                    <div key={influencer.assignment_id || influencer.id} className="assignment-card">
+                      <div className="assignment-card-header">
                         <div className="influencer-cell">
-                          <div className="influencer-avatar">
-                            {influencer.name.charAt(0)}
-                          </div>
+                          <div className="influencer-avatar">{(influencer.name || 'U').charAt(0)}</div>
                           <div>
-                            <div className="influencer-name">{influencer.name}</div>
-                            <div className="influencer-username">{influencer.username}</div>
+                            <div className="influencer-name">{influencer.name || 'Unknown'}</div>
+                            <span className="platform-badge">
+                              <span className={`platform-icon ${(influencer.platform || '').toLowerCase()}`}></span>
+                              {influencer.platform || 'N/A'}
+                            </span>
                           </div>
                         </div>
-                      </td>
-                      <td>
-                        <span className="platform-badge">
-                          <span className={`platform-icon ${influencer.platform.toLowerCase()}`}></span>
-                          {influencer.platform}
-                        </span>
-                      </td>
-                      <td>{formatNumber(influencer.followers)}</td>
-                      <td>{influencer.total_content}</td>
-                      <td>{formatNumber(influencer.total_views)}</td>
-                      <td>{formatNumber(influencer.total_likes)}</td>
-                      <td>{formatNumber(influencer.total_comments)}</td>
-                      <td>
-                        <span className="engagement-badge">{infEngagement}%</span>
-                      </td>
-                    </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        <div className="assignment-card-stats">
+                          <span title="Followers">{formatNumber(influencer.followers || 0)} followers</span>
+                          <span title="Content">{contentLinks.length} posts</span>
+                          <span title="Views">{formatNumber(influencer.total_views || 0)} views</span>
+                          <span title="Engagement">{infEngagement}% eng.</span>
+                          {isCampaignManager() && (
+                            <button className="btn-remove-inf" onClick={() => handleRemoveInfluencer(influencer.assignment_id)}>Remove</button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="assignment-content-links">
+                        <div className="content-links-header">
+                          <span className="content-links-label">Content Links ({contentLinks.length})</span>
+                          {isCampaignExecutor() && addingContentFor !== influencer.assignment_id && (
+                            <button className="btn-edit-link" onClick={() => { setAddingContentFor(influencer.assignment_id); setNewContentUrl(''); setNewContentType('Post'); }}>
+                              + Add Link
+                            </button>
+                          )}
+                        </div>
+
+                        {addingContentFor === influencer.assignment_id && (
+                          <div className="add-content-form">
+                            <select value={newContentType} onChange={(e) => setNewContentType(e.target.value)} style={{ maxWidth: '120px' }}>
+                              <option value="Post">Post</option>
+                              <option value="Reel">Reel</option>
+                              <option value="Story">Story</option>
+                              <option value="Video">Video</option>
+                              <option value="Short">Short</option>
+                            </select>
+                            <input
+                              type="url"
+                              value={newContentUrl}
+                              onChange={(e) => setNewContentUrl(e.target.value)}
+                              placeholder="Enter content URL..."
+                              style={{ flex: 1 }}
+                            />
+                            <button className="btn-save-action btn-sm" onClick={() => handleAddContent(influencer.assignment_id)} disabled={!newContentUrl.trim()}>Add</button>
+                            <button className="btn-cancel-action btn-sm" onClick={() => setAddingContentFor(null)}>Cancel</button>
+                          </div>
+                        )}
+
+                        {contentLinks.length > 0 ? (
+                          <div className="content-links-list">
+                            {contentLinks.map((content, cIdx) => (
+                              <div key={content.id} className="content-link-row">
+                                <span className="content-link-index">{cIdx + 1}.</span>
+                                <span className="content-link-type">{content.content_type}</span>
+                                {editingContentId === content.id ? (
+                                  <div className="link-edit-inline" style={{ flex: 1 }}>
+                                    <input type="url" value={editContentUrl} onChange={(e) => setEditContentUrl(e.target.value)} style={{ flex: 1 }} />
+                                    <button className="btn-save-action btn-sm" onClick={() => handleUpdateContent(content.id)}>Save</button>
+                                    <button className="btn-cancel-action btn-sm" onClick={() => setEditingContentId(null)}>Cancel</button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <a href={content.url || '#'} target="_blank" rel="noopener noreferrer" className="content-link-url">
+                                      {(content.url || '').length > 50 ? content.url.substring(0, 50) + '...' : (content.url || 'No URL')}
+                                    </a>
+                                    {content.views > 0 && <span className="content-link-stat">{formatNumber(content.views)} views</span>}
+                                    {isCampaignExecutor() && (
+                                      <div className="content-link-actions">
+                                        <button className="btn-edit-link" onClick={() => { setEditingContentId(content.id); setEditContentUrl(content.url); }}>Edit</button>
+                                        <button className="btn-remove-inf" onClick={() => handleDeleteContent(content.id)}>Del</button>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="no-content-links">No content links added yet</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-state">
@@ -599,20 +897,20 @@ function CampaignDetail() {
 
         {activeTab === 'content' && (
           <div className="content-section">
-            <h3 className="section-title">All Content ({campaign.content.length})</h3>
+            <h3 className="section-title">All Content ({(campaign.content || []).length})</h3>
             {campaign.content && campaign.content.length > 0 ? (
               <div className="content-gallery">
                 {campaign.content.map((content) => (
                 <div key={content.id} className="gallery-card">
                   <div className="gallery-thumbnail">
-                    <img src={content.thumbnail || 'https://via.placeholder.com/400x300'} alt="" />
+                    <img src={content.thumbnail || 'https://placehold.co/400x300'} alt="" />
                   </div>
                   <div className="gallery-info">
                     <div className="gallery-creator">
                       <div className="creator-info">
-                        <span className="creator-name">{content.influencer_username}</span>
-                        <span className={`platform-badge-mini ${content.platform.toLowerCase()}`}>
-                          <span className={`platform-icon ${content.platform.toLowerCase()}`}></span>
+                        <span className="creator-name">{content.influencer_name || content.influencer_username}</span>
+                        <span className={`platform-badge-mini ${(content.platform || '').toLowerCase()}`}>
+                          <span className={`platform-icon ${(content.platform || '').toLowerCase()}`}></span>
                           {content.content_type}
                         </span>
                       </div>

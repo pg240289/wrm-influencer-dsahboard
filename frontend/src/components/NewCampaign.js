@@ -13,6 +13,11 @@ function NewCampaign() {
   const [influencers, setInfluencers] = useState([]);
   const [selectedInfluencers, setSelectedInfluencers] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [selectedTiers, setSelectedTiers] = useState([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
+
+  const allPlatforms = ['Instagram', 'YouTube', 'Facebook', 'X (Twitter)', 'LinkedIn'];
 
   const [formData, setFormData] = useState({
     campaign_name: '',
@@ -33,11 +38,7 @@ function NewCampaign() {
         const usersResponse = await axios.get('/users');
         setUsers(usersResponse.data.filter(u => u.is_active));
 
-        // Fetch active influencers
-        const influencersResponse = await axios.get('/influencers', {
-          params: { status: 'active' }
-        });
-        setInfluencers(influencersResponse.data);
+        // Influencers are fetched when tier is selected
 
         // Fetch active brands
         const brandsResponse = await axios.get('/brands');
@@ -48,6 +49,41 @@ function NewCampaign() {
     };
     fetchData();
   }, []);
+
+  const fetchFilteredInfluencers = async (tiers, platforms) => {
+    setSelectedInfluencers([]);
+    if (tiers.length === 0) {
+      setInfluencers([]);
+      return;
+    }
+    try {
+      const params = { status: 'active', for_campaign: true, tier: tiers.join(',') };
+      if (platforms.length > 0) {
+        params.platforms = platforms.join(',');
+      }
+      const res = await axios.get('/influencers', { params });
+      setInfluencers(res.data);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setInfluencers([]);
+    }
+  };
+
+  const handleTierToggle = (tier) => {
+    const newTiers = selectedTiers.includes(tier)
+      ? selectedTiers.filter(t => t !== tier)
+      : [...selectedTiers, tier];
+    setSelectedTiers(newTiers);
+    fetchFilteredInfluencers(newTiers, selectedPlatforms);
+  };
+
+  const handlePlatformToggle = (platform) => {
+    const newPlatforms = selectedPlatforms.includes(platform)
+      ? selectedPlatforms.filter(p => p !== platform)
+      : [...selectedPlatforms, platform];
+    setSelectedPlatforms(newPlatforms);
+    fetchFilteredInfluencers(selectedTiers, newPlatforms);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,26 +117,42 @@ function NewCampaign() {
       );
 
       if (existing) {
-        // Remove this influencer-platform combo
         return prev.filter(item =>
           !(item.influencer_id === influencerId && item.platform === platform)
         );
       } else {
-        // Add new influencer-platform combo with empty link
-        return [...prev, { influencer_id: influencerId, platform, link: '' }];
+        return [...prev, { influencer_id: influencerId, platform, content_links: [] }];
       }
     });
   };
 
-  const handleInfluencerLinkChange = (influencerId, platform, link) => {
-    setSelectedInfluencers(prev => {
-      return prev.map(item => {
-        if (item.influencer_id === influencerId && item.platform === platform) {
-          return { ...item, link };
-        }
-        return item;
-      });
-    });
+  const addContentLink = (influencerId, platform) => {
+    setSelectedInfluencers(prev => prev.map(item => {
+      if (item.influencer_id === influencerId && item.platform === platform) {
+        return { ...item, content_links: [...item.content_links, { content_type: 'Post', url: '' }] };
+      }
+      return item;
+    }));
+  };
+
+  const updateContentLink = (influencerId, platform, index, field, value) => {
+    setSelectedInfluencers(prev => prev.map(item => {
+      if (item.influencer_id === influencerId && item.platform === platform) {
+        const updated = [...item.content_links];
+        updated[index] = { ...updated[index], [field]: value };
+        return { ...item, content_links: updated };
+      }
+      return item;
+    }));
+  };
+
+  const removeContentLink = (influencerId, platform, index) => {
+    setSelectedInfluencers(prev => prev.map(item => {
+      if (item.influencer_id === influencerId && item.platform === platform) {
+        return { ...item, content_links: item.content_links.filter((_, i) => i !== index) };
+      }
+      return item;
+    }));
   };
 
   const isInfluencerSelected = (influencerId, platform) => {
@@ -109,19 +161,24 @@ function NewCampaign() {
     );
   };
 
-  const getInfluencerLink = (influencerId, platform) => {
+  const getContentLinks = (influencerId, platform) => {
     const item = selectedInfluencers.find(
       item => item.influencer_id === influencerId && item.platform === platform
     );
-    return item?.link || '';
+    return item?.content_links || [];
   };
 
   const getPlatformsForInfluencer = (influencer) => {
     const platforms = [];
     if (influencer.instagram_followers > 0) platforms.push('Instagram');
     if (influencer.youtube_subscribers > 0) platforms.push('YouTube');
-    if (influencer.tiktok_followers > 0) platforms.push('TikTok');
-    if (influencer.twitter_followers > 0) platforms.push('Twitter');
+    if (influencer.facebook_followers > 0) platforms.push('Facebook');
+    if (influencer.twitter_followers > 0) platforms.push('X (Twitter)');
+    if (influencer.linkedin_followers > 0) platforms.push('LinkedIn');
+    // If platforms are selected, only show those
+    if (selectedPlatforms.length > 0) {
+      return platforms.filter(p => selectedPlatforms.includes(p));
+    }
     return platforms;
   };
 
@@ -399,13 +456,96 @@ function NewCampaign() {
           )}
 
           {/* Influencer Selection Section */}
-          {influencers.length > 0 && (
-            <div className="form-section">
-              <div className="section-header">
-                <h2>Select Influencers (Optional)</h2>
-                <p>Choose influencers and platforms for this campaign</p>
+          <div className="form-section">
+            <div className="section-header">
+              <h2>Select Influencers (Optional)</h2>
+              <p>Choose an influencer level first, then select influencers and platforms</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px', color: '#374151' }}>Influencer Level</label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {['Mega', 'Macro', 'Micro', 'Nano'].map(tier => (
+                    <label key={tier} style={{
+                      display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+                      padding: '6px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: 500,
+                      border: `1px solid ${selectedTiers.includes(tier) ? '#667eea' : '#d1d5db'}`,
+                      background: selectedTiers.includes(tier) ? '#eef2ff' : 'white',
+                      color: selectedTiers.includes(tier) ? '#4338ca' : '#374151',
+                      transition: 'all 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedTiers.includes(tier)}
+                        onChange={() => handleTierToggle(tier)}
+                        style={{ display: 'none' }}
+                      />
+                      {selectedTiers.includes(tier) ? '✓ ' : ''}{tier}
+                    </label>
+                  ))}
+                </div>
               </div>
 
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px', color: '#374151' }}>Campaign Platforms</label>
+                <div style={{ position: 'relative' }}>
+                  <div
+                    onClick={() => setPlatformDropdownOpen(!platformDropdownOpen)}
+                    style={{
+                      border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px',
+                      cursor: 'pointer', minHeight: '38px', background: 'white',
+                      display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center'
+                    }}
+                  >
+                    {selectedPlatforms.length === 0 ? (
+                      <span style={{ color: '#9ca3af', fontSize: '14px' }}>Select platforms...</span>
+                    ) : (
+                      selectedPlatforms.map(p => (
+                        <span key={p} style={{
+                          background: '#eef2ff', color: '#4338ca', padding: '2px 8px',
+                          borderRadius: '12px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px'
+                        }}>
+                          {p}
+                          <span
+                            onClick={(e) => { e.stopPropagation(); handlePlatformToggle(p); }}
+                            style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+                          >x</span>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                  {platformDropdownOpen && (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                      background: 'white', border: '1px solid #d1d5db', borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: '4px'
+                    }}>
+                      {allPlatforms.map(p => (
+                        <label key={p} style={{
+                          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+                          cursor: 'pointer', fontSize: '14px', borderBottom: '1px solid #f3f4f6'
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedPlatforms.includes(p)}
+                            onChange={() => handlePlatformToggle(p)}
+                          />
+                          {p}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {selectedTiers.length > 0 && influencers.length === 0 && (
+              <p style={{ color: '#6b7280', fontSize: '14px' }}>No active influencers found for selected level(s).</p>
+            )}
+
+            {influencers.length > 0 && (
+              <>
               <div className="influencers-assignment-grid">
                 {influencers.map(inf => {
                   const platforms = getPlatformsForInfluencer(inf);
@@ -438,7 +578,9 @@ function NewCampaign() {
                       </div>
 
                       <div className="platform-checkboxes">
-                        {platforms.map(platform => (
+                        {platforms.map(platform => {
+                          const links = getContentLinks(inf.id, platform);
+                          return (
                           <div key={platform} className="platform-row">
                             <label className="platform-checkbox-label">
                               <input
@@ -450,21 +592,50 @@ function NewCampaign() {
                               <span className="platform-followers">
                                 {platform === 'Instagram' && formatNumber(inf.instagram_followers)}
                                 {platform === 'YouTube' && formatNumber(inf.youtube_subscribers)}
-                                {platform === 'TikTok' && formatNumber(inf.tiktok_followers)}
-                                {platform === 'Twitter' && formatNumber(inf.twitter_followers)}
+                                {platform === 'Facebook' && formatNumber(inf.facebook_followers)}
+                                {platform === 'X (Twitter)' && formatNumber(inf.twitter_followers)}
+                                {platform === 'LinkedIn' && formatNumber(inf.linkedin_followers)}
                               </span>
                             </label>
                             {isInfluencerSelected(inf.id, platform) && (
-                              <input
-                                type="url"
-                                className="platform-link-input"
-                                placeholder={`Enter ${platform} profile/post link...`}
-                                value={getInfluencerLink(inf.id, platform)}
-                                onChange={(e) => handleInfluencerLinkChange(inf.id, platform, e.target.value)}
-                              />
+                              <div className="content-links-section">
+                                {links.map((cl, clIdx) => (
+                                  <div key={clIdx} className="content-link-row-form">
+                                    <select
+                                      value={cl.content_type}
+                                      onChange={(e) => updateContentLink(inf.id, platform, clIdx, 'content_type', e.target.value)}
+                                      style={{ maxWidth: '100px', padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                    >
+                                      <option value="Post">Post</option>
+                                      <option value="Reel">Reel</option>
+                                      <option value="Story">Story</option>
+                                      <option value="Video">Video</option>
+                                      <option value="Short">Short</option>
+                                    </select>
+                                    <input
+                                      type="url"
+                                      className="platform-link-input"
+                                      placeholder="Enter content URL..."
+                                      value={cl.url}
+                                      onChange={(e) => updateContentLink(inf.id, platform, clIdx, 'url', e.target.value)}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeContentLink(inf.id, platform, clIdx)}
+                                      style={{ background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px' }}
+                                    >x</button>
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => addContentLink(inf.id, platform)}
+                                  style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
+                                >+ Add Content Link</button>
+                              </div>
                             )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -474,10 +645,14 @@ function NewCampaign() {
               {selectedInfluencers.length > 0 && (
                 <div className="selection-summary">
                   ✓ {selectedInfluencers.length} influencer-platform combination(s) selected
+                  {selectedInfluencers.reduce((sum, i) => sum + i.content_links.length, 0) > 0 && (
+                    <span> with {selectedInfluencers.reduce((sum, i) => sum + i.content_links.length, 0)} content link(s)</span>
+                  )}
                 </div>
               )}
-            </div>
-          )}
+            </>
+            )}
+          </div>
 
           {/* Form Actions */}
           <div className="form-actions">

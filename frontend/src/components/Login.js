@@ -17,9 +17,15 @@ function Login() {
     setLoading(true);
 
     const result = await login(username, password);
-    
+
     if (result.success) {
-      navigate('/');
+      // Redirect influencers to their dashboard
+      const userData = result.user || {};
+      if (userData.roles && userData.roles.includes('Influencer')) {
+        navigate('/influencer/dashboard');
+      } else {
+        navigate('/');
+      }
     } else {
       setError(result.error);
     }
