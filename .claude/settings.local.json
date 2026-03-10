@@ -11,7 +11,8 @@
       "Bash(python upgrade_schema.py:*)",
       "Bash(python:*)",
       "Bash(sqlite3:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(del \"d:\\\\work-projects\\\\wrm-influencer-dsahboard\\\\backend\\\\add_facebook_linkedin_columns.py\")"
     ],
     "deny": [],
     "ask": []

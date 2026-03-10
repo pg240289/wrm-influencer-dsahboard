@@ -1,0 +1,536 @@
+2026-01-23 18:37:13,818 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 18:37:13,818 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:37:13,818 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 18:37:13,818 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:48:06,174 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 18:48:06,174 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:48:06,174 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 18:48:06,174 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:48:06,658 - SocialMetricsService - INFO - Found 0 content records to process
+2026-01-23 18:48:06,658 - SocialMetricsService - INFO - Database changes committed successfully
+2026-01-23 18:48:06,658 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:48:06,658 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-01-23 18:48:06,658 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 0
+2026-01-23 18:48:06,674 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:50:16,694 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 18:50:16,694 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:50:16,694 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 18:50:16,694 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - Found 0 content records to process
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - Database changes committed successfully
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 0
+2026-01-23 18:50:16,765 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:51:23,498 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 18:51:23,498 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:51:23,498 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 18:51:23,498 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - Found 0 content records to process
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - Database changes committed successfully
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 0
+2026-01-23 18:51:23,565 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:59:19,941 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 18:59:19,941 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:59:19,941 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 18:59:19,957 - SocialMetricsService - INFO - ============================================================
+2026-01-23 18:59:19,987 - SocialMetricsService - INFO - Found 17 campaign_influencer records with links to process
+2026-01-23 18:59:19,987 - SocialMetricsService - INFO - Processing CampaignInfluencer 2: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:19,987 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:19,987 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:19,987 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 18:59:20,286 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 18:59:20,286 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 18:59:20,301 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 18:59:20,653 - SocialMetricsService - INFO - Created new Content 52 for CampaignInfluencer 2
+2026-01-23 18:59:20,653 - SocialMetricsService - INFO - Updated Content 52 for CampaignInfluencer 2: views=3752610, likes=27273, comments=1116
+2026-01-23 18:59:20,653 - SocialMetricsService - INFO - Processing CampaignInfluencer 3: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:20,653 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:20,670 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 18:59:20,670 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 18:59:20,845 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 18:59:20,845 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 18:59:20,861 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:56,474 - SocialMetricsService - INFO - YouTube fetcher: configured
+2026-01-23 19:02:56,474 - SocialMetricsService - INFO - ============================================================
+2026-01-23 19:02:56,474 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-01-23 19:02:56,474 - SocialMetricsService - INFO - ============================================================
+2026-01-23 19:02:56,490 - SocialMetricsService - INFO - Found 17 campaign_influencer records with links to process
+2026-01-23 19:02:56,490 - SocialMetricsService - INFO - Processing CampaignInfluencer 2: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,498 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,498 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,498 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:56,720 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:56,720 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:56,728 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:56,772 - SocialMetricsService - INFO - Created new Content 53 for CampaignInfluencer 2
+2026-01-23 19:02:56,772 - SocialMetricsService - INFO - Updated Content 53 for CampaignInfluencer 2: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:56,780 - SocialMetricsService - INFO - Processing CampaignInfluencer 3: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,780 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,780 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,789 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:56,946 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:56,946 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:56,946 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:56,991 - SocialMetricsService - INFO - Created new Content 54 for CampaignInfluencer 3
+2026-01-23 19:02:56,999 - SocialMetricsService - INFO - Updated Content 54 for CampaignInfluencer 3: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:56,999 - SocialMetricsService - INFO - Processing CampaignInfluencer 4: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,999 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,999 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:56,999 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:57,211 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:57,211 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:57,226 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:57,379 - SocialMetricsService - INFO - Created new Content 55 for CampaignInfluencer 4
+2026-01-23 19:02:57,379 - SocialMetricsService - INFO - Updated Content 55 for CampaignInfluencer 4: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:57,389 - SocialMetricsService - INFO - Processing CampaignInfluencer 5: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,389 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,389 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,389 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:57,626 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:57,626 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:57,643 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:57,659 - SocialMetricsService - INFO - Created new Content 56 for CampaignInfluencer 5
+2026-01-23 19:02:57,674 - SocialMetricsService - INFO - Updated Content 56 for CampaignInfluencer 5: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:57,674 - SocialMetricsService - INFO - Processing CampaignInfluencer 10: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,674 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,674 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,674 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:57,844 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:57,844 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:57,844 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:57,859 - SocialMetricsService - INFO - Created new Content 57 for CampaignInfluencer 10
+2026-01-23 19:02:57,859 - SocialMetricsService - INFO - Updated Content 57 for CampaignInfluencer 10: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:57,859 - SocialMetricsService - INFO - Processing CampaignInfluencer 12: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,866 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,866 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:57,866 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:57,987 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:57,987 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:58,004 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:58,028 - SocialMetricsService - INFO - Created new Content 58 for CampaignInfluencer 12
+2026-01-23 19:02:58,036 - SocialMetricsService - INFO - Updated Content 58 for CampaignInfluencer 12: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:58,038 - SocialMetricsService - INFO - Processing CampaignInfluencer 16: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,038 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,038 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,038 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:58,848 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:58,848 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:58,871 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:58,887 - SocialMetricsService - INFO - Created new Content 59 for CampaignInfluencer 16
+2026-01-23 19:02:58,895 - SocialMetricsService - INFO - Updated Content 59 for CampaignInfluencer 16: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:58,899 - SocialMetricsService - INFO - Processing CampaignInfluencer 17: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,899 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,899 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:58,899 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:59,155 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:59,155 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:59,170 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:59,238 - SocialMetricsService - INFO - Created new Content 60 for CampaignInfluencer 17
+2026-01-23 19:02:59,238 - SocialMetricsService - INFO - Updated Content 60 for CampaignInfluencer 17: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:59,238 - SocialMetricsService - INFO - Processing CampaignInfluencer 19: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,246 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,246 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,246 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:59,562 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:59,562 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:59,578 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Created new Content 61 for CampaignInfluencer 19
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Updated Content 61 for CampaignInfluencer 19: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Processing CampaignInfluencer 24: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,606 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:02:59,786 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:02:59,786 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:02:59,786 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:02:59,829 - SocialMetricsService - INFO - Created new Content 62 for CampaignInfluencer 24
+2026-01-23 19:02:59,838 - SocialMetricsService - INFO - Updated Content 62 for CampaignInfluencer 24: views=3752610, likes=27273, comments=1116
+2026-01-23 19:02:59,838 - SocialMetricsService - INFO - Processing CampaignInfluencer 29: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,846 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,846 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:02:59,846 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:03:00,054 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:03:00,054 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:03:00,054 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:03:00,072 - SocialMetricsService - INFO - Created new Content 63 for CampaignInfluencer 29
+2026-01-23 19:03:00,075 - SocialMetricsService - INFO - Updated Content 63 for CampaignInfluencer 29: views=3752610, likes=27273, comments=1116
+2026-01-23 19:03:00,075 - SocialMetricsService - INFO - Processing CampaignInfluencer 31: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,075 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,075 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,075 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:03:00,244 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:03:00,244 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:03:00,268 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:03:00,308 - SocialMetricsService - INFO - Created new Content 64 for CampaignInfluencer 31
+2026-01-23 19:03:00,308 - SocialMetricsService - INFO - Updated Content 64 for CampaignInfluencer 31: views=3752610, likes=27273, comments=1116
+2026-01-23 19:03:00,308 - SocialMetricsService - INFO - Processing CampaignInfluencer 32: platform=Instagram, link=https://www/google.com
+2026-01-23 19:03:00,308 - SocialMetricsService - WARNING - No fetcher available for platform: Instagram
+2026-01-23 19:03:00,316 - SocialMetricsService - INFO - Skipped CampaignInfluencer 32 - no metrics returned
+2026-01-23 19:03:00,316 - SocialMetricsService - INFO - Processing CampaignInfluencer 33: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,316 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,316 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,316 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:03:00,485 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:03:00,485 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:03:00,485 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:03:00,523 - SocialMetricsService - INFO - Created new Content 65 for CampaignInfluencer 33
+2026-01-23 19:03:00,523 - SocialMetricsService - INFO - Updated Content 65 for CampaignInfluencer 33: views=3752610, likes=27273, comments=1116
+2026-01-23 19:03:00,523 - SocialMetricsService - INFO - Processing CampaignInfluencer 34: platform=Instagram, link=https://www/google.com
+2026-01-23 19:03:00,523 - SocialMetricsService - WARNING - No fetcher available for platform: Instagram
+2026-01-23 19:03:00,538 - SocialMetricsService - INFO - Skipped CampaignInfluencer 34 - no metrics returned
+2026-01-23 19:03:00,538 - SocialMetricsService - INFO - Processing CampaignInfluencer 35: platform=YouTube, link=https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,538 - SocialMetricsService - INFO - Fetching metrics from YouTube for URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,538 - SocialMetricsService - INFO - Extracted video ID: P96xEX9AJzM from URL: https://www.youtube.com/watch?v=P96xEX9AJzM
+2026-01-23 19:03:00,538 - SocialMetricsService - INFO - Making YouTube API request to: https://www.googleapis.com/youtube/v3/videos
+2026-01-23 19:03:00,709 - SocialMetricsService - INFO - YouTube API response status: 200
+2026-01-23 19:03:00,709 - SocialMetricsService - INFO - YouTube API response body: {
+  "kind": "youtube#videoListResponse",
+  "etag": "JA1D8WskYa4hmRizxlBv-4y_O5w",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "tMjMHyp3Dnt7DDadpkXoAaqPw4o",
+      "id": "P96xEX9AJzM",
+      "statistics": {
+        "viewCount": "3752610",
+        "likeCount": "27273",
+        "favoriteCount": "0",
+        "commentCount": "1116"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 1
+  }
+}
+
+2026-01-23 19:03:00,709 - SocialMetricsService - INFO - YouTube stats for P96xEX9AJzM: {'viewCount': '3752610', 'likeCount': '27273', 'favoriteCount': '0', 'commentCount': '1116'}
+2026-01-23 19:03:00,746 - SocialMetricsService - INFO - Created new Content 66 for CampaignInfluencer 35
+2026-01-23 19:03:00,746 - SocialMetricsService - INFO - Updated Content 66 for CampaignInfluencer 35: views=3752610, likes=27273, comments=1116
+2026-01-23 19:03:00,746 - SocialMetricsService - INFO - Processing CampaignInfluencer 36: platform=Instagram, link=https://www/google.com
+2026-01-23 19:03:00,746 - SocialMetricsService - WARNING - No fetcher available for platform: Instagram
+2026-01-23 19:03:00,746 - SocialMetricsService - INFO - Skipped CampaignInfluencer 36 - no metrics returned
+2026-01-23 19:03:00,796 - SocialMetricsService - INFO - Database changes committed successfully
+2026-01-23 19:03:00,796 - SocialMetricsService - INFO - ============================================================
+2026-01-23 19:03:00,796 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-01-23 19:03:00,796 - SocialMetricsService - INFO - Success: 14, Failed: 0, Skipped: 3
+2026-01-23 19:03:00,796 - SocialMetricsService - INFO - ============================================================

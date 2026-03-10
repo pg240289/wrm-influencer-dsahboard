@@ -420,6 +420,12 @@
 .platform-checkboxes {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.platform-row {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -459,6 +465,49 @@
   font-size: 12px;
   font-weight: 600;
   color: #94a3b8;
+}
+
+.platform-link-input {
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  background: white;
+  color: #0f172a;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.platform-link-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.platform-link-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.content-links-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-left: 24px;
+}
+
+.content-link-row-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.content-link-row-form .platform-link-input {
+  margin-top: 0;
 }
 
 .selection-summary {

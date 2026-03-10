@@ -6,10 +6,11 @@ import './InfluencerList.css';
 
 function InfluencerList() {
   const navigate = useNavigate();
-  const { user, isManager } = useAuth();
+  const { user, isManager, isCampaignManager } = useAuth();
   const [influencers, setInfluencers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [inviteMsg, setInviteMsg] = useState(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,8 +23,15 @@ function InfluencerList() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isWrmDropdownOpen, setIsWrmDropdownOpen] = useState(false);
 
-  // All available categories (extracted from influencers)
+  // All available categories (from API)
   const [allCategories, setAllCategories] = useState([]);
+
+  useEffect(() => {
+    // Fetch categories from master
+    axios.get('/categories').then(res => {
+      setAllCategories(res.data.map(cat => cat.name));
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchInfluencers();
@@ -38,18 +46,9 @@ function InfluencerList() {
       if (categoryFilter) params.append('category', categoryFilter);
       if (wrmFilter) params.append('worked_with_wrm', wrmFilter);
 
+      params.append('status', '');  // Show all influencers regardless of status
       const response = await axios.get(`/influencers?${params.toString()}`);
       setInfluencers(response.data);
-
-      // Extract unique categories
-      const categoriesSet = new Set();
-      response.data.forEach(inf => {
-        if (inf.categories && Array.isArray(inf.categories)) {
-          inf.categories.forEach(cat => categoriesSet.add(cat));
-        }
-      });
-      setAllCategories(Array.from(categoriesSet).sort());
-
       setError(null);
     } catch (err) {
       setError('Failed to load influencers');
@@ -132,6 +131,41 @@ function InfluencerList() {
   };
 
   const activeFilterCount = [tierFilter, categoryFilter, wrmFilter].filter(Boolean).length;
+
+  const handleInvite = async (e, influencerId, isResend) => {
+    e.stopPropagation();
+    try {
+      const endpoint = isResend
+        ? `/influencers/${influencerId}/resend-invite`
+        : `/influencers/${influencerId}/invite`;
+      const res = await axios.post(endpoint);
+      const msg = res.data.email_sent
+        ? res.data.message
+        : `${res.data.warning} Link: ${res.data.invite_link}`;
+      setInviteMsg({ type: 'success', text: msg });
+      fetchInfluencers();
+      setTimeout(() => setInviteMsg(null), 8000);
+    } catch (err) {
+      const errData = err.response?.data;
+      if (errData?.already_invited) {
+        // Offer to resend
+        try {
+          const res = await axios.post(`/influencers/${influencerId}/resend-invite`);
+          const msg = res.data.email_sent
+            ? 'Invitation resent successfully'
+            : `${res.data.warning} Link: ${res.data.invite_link}`;
+          setInviteMsg({ type: 'success', text: msg });
+          setTimeout(() => setInviteMsg(null), 8000);
+        } catch (resendErr) {
+          setInviteMsg({ type: 'error', text: resendErr.response?.data?.error || 'Failed to resend invite' });
+          setTimeout(() => setInviteMsg(null), 5000);
+        }
+      } else {
+        setInviteMsg({ type: 'error', text: errData?.error || 'Failed to send invite' });
+        setTimeout(() => setInviteMsg(null), 5000);
+      }
+    }
+  };
 
   return (
     <div className="influencer-list-container">
@@ -275,6 +309,20 @@ function InfluencerList() {
         </div>
       </div>
 
+      {/* Invite Message */}
+      {inviteMsg && (
+        <div style={{
+          padding: '12px 16px', borderRadius: '8px', marginBottom: '16px',
+          background: inviteMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
+          color: inviteMsg.type === 'success' ? '#16a34a' : '#dc2626',
+          border: `1px solid ${inviteMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', wordBreak: 'break-all'
+        }}>
+          <span>{inviteMsg.text}</span>
+          <button onClick={() => setInviteMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>x</button>
+        </div>
+      )}
+
       {/* Results */}
       <div className="results-card">
         <div className="results-header">
@@ -361,9 +409,26 @@ function InfluencerList() {
                       </div>
                     )}
                   </div>
-                  {inf.worked_with_wrm && (
-                    <span className="wrm-badge">WRM</span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {inf.worked_with_wrm && (
+                      <span className="wrm-badge">WRM</span>
+                    )}
+                    {isCampaignManager() && inf.email && (
+                      inf.invite_status === 'accepted' ? (
+                        <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600, background: '#f0fdf4', padding: '2px 8px', borderRadius: '10px' }}>Joined</span>
+                      ) : inf.invite_status === 'invited' ? (
+                        <button onClick={(e) => handleInvite(e, inf.id, true)} style={{
+                          fontSize: '11px', color: '#d97706', background: '#fffbeb', border: '1px solid #fcd34d',
+                          padding: '2px 8px', borderRadius: '10px', cursor: 'pointer', fontWeight: 600
+                        }}>Resend</button>
+                      ) : (
+                        <button onClick={(e) => handleInvite(e, inf.id, false)} style={{
+                          fontSize: '11px', color: '#667eea', background: '#eef2ff', border: '1px solid #c7d2fe',
+                          padding: '2px 8px', borderRadius: '10px', cursor: 'pointer', fontWeight: 600
+                        }}>Invite</button>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
