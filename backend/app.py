@@ -19,7 +19,10 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+# Configure CORS with allowed origins from environment
+allowed_origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 # Configure MySQL database using environment variables
 db_host = os.getenv('DB_HOST', 'localhost')
