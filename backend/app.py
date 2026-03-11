@@ -75,6 +75,9 @@ class Role(db.Model):
     def to_dict(self):
         try:
             permissions_list = json.loads(self.permissions) if self.permissions else []
+            # Handle double-encoded JSON strings
+            if isinstance(permissions_list, str):
+                permissions_list = json.loads(permissions_list)
         except:
             permissions_list = []
         
