@@ -440,7 +440,7 @@ function UserManagement() {
                     <div className="role-permissions-preview">
                       <div className="permissions-label">Permissions:</div>
                       <div className="permissions-tags">
-                        {(role.permissions || []).map((perm, idx) => (
+                        {(Array.isArray(role.permissions) ? role.permissions : []).map((perm, idx) => (
                           <span key={idx} className="permission-tag">
                             {perm === '*' ? 'Full Access' : perm.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                           </span>
