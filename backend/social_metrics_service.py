@@ -110,6 +110,17 @@ class Content(db.Model):
     last_metrics_update = db.Column(db.DateTime)
 
 
+class Campaign(db.Model):
+    """Mirror of Campaign model from app.py - for checking active campaigns"""
+    __tablename__ = 'campaign'
+
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_name = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime)
+
+
 class MetricsFetchLog(db.Model):
     """Log table to track metrics fetch attempts"""
     __tablename__ = 'metrics_fetch_log'
@@ -243,16 +254,14 @@ class YouTubeFetcher(BaseFetcher):
 
 
 class InstagramFetcher(BaseFetcher):
-    """Fetcher for Instagram post/reel metrics using Facebook Graph API"""
+    """Fetcher for Instagram post/reel metrics using Apify Instagram Post Scraper"""
 
     def __init__(self):
         super().__init__()
-        self.access_token = os.getenv('INSTAGRAM_ACCESS_TOKEN')
-        self.ig_business_account_id = os.getenv('INSTAGRAM_BUSINESS_ACCOUNT_ID')
-        self.base_url = 'https://graph.facebook.com/v18.0'
+        self.apify_token = os.getenv('APIFY_API_TOKEN')
 
     def is_configured(self):
-        return bool(self.access_token)
+        return bool(self.apify_token)
 
     def extract_shortcode(self, url):
         if not url:
@@ -268,73 +277,45 @@ class InstagramFetcher(BaseFetcher):
                 return match.group(1)
         return None
 
-    def shortcode_to_media_id(self, shortcode):
-        if not shortcode:
-            return None
-        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-        media_id = 0
-        for char in shortcode:
-            media_id = media_id * 64 + alphabet.index(char)
-        return str(media_id)
-
-    def get_ig_media_id_from_shortcode(self, shortcode):
-        if not self.ig_business_account_id:
-            return self.shortcode_to_media_id(shortcode)
-        try:
-            response = requests.get(
-                f'{self.base_url}/{self.ig_business_account_id}/media',
-                params={'fields': 'id,shortcode,like_count,comments_count', 'access_token': self.access_token},
-                timeout=10
-            )
-            response.raise_for_status()
-            data = response.json()
-            for media in data.get('data', []):
-                if media.get('shortcode') == shortcode:
-                    return media.get('id')
-        except Exception as e:
-            logger.warning(f"Could not find media ID from account: {e}")
-        return self.shortcode_to_media_id(shortcode)
-
     def fetch_metrics(self, url):
         if not self.is_configured():
+            logger.warning("Apify API token not configured for Instagram fetcher")
             return None
         shortcode = self.extract_shortcode(url)
         if not shortcode:
+            logger.warning(f"Could not extract shortcode from URL: {url}")
             return None
         try:
-            media_id = self.get_ig_media_id_from_shortcode(shortcode)
-            if not media_id:
+            from apify_client import ApifyClient
+            client = ApifyClient(self.apify_token)
+
+            run_input = {
+                "directUrls": [url],
+                "resultsLimit": 1,
+            }
+
+            logger.info(f"Running Apify Instagram scraper for: {url}")
+            run = client.actor("shu8hvrXbJbY3Eb9W").call(run_input=run_input)
+
+            items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+
+            if not items:
+                logger.warning(f"No data returned from Apify for: {url}")
                 return None
-            response = requests.get(
-                f'{self.base_url}/{media_id}',
-                params={'fields': 'like_count,comments_count,media_type,timestamp,caption', 'access_token': self.access_token},
-                timeout=10
-            )
-            if response.status_code == 200:
-                data = response.json()
-                insights_data = {}
-                try:
-                    insights_response = requests.get(
-                        f'{self.base_url}/{media_id}/insights',
-                        params={'metric': 'impressions,reach,saved,shares', 'access_token': self.access_token},
-                        timeout=10
-                    )
-                    if insights_response.status_code == 200:
-                        insights = insights_response.json().get('data', [])
-                        for insight in insights:
-                            insights_data[insight['name']] = insight['values'][0]['value']
-                except Exception as e:
-                    logger.debug(f"Could not fetch insights: {e}")
-                return {
-                    'views': insights_data.get('impressions', 0),
-                    'likes': data.get('like_count', 0),
-                    'comments': data.get('comments_count', 0),
-                    'shares': insights_data.get('shares', 0),
-                    'saves': insights_data.get('saved', 0)
-                }
-            return None
+
+            post = items[0]
+
+            return {
+                'views': post.get('videoPlayCount', 0) or post.get('videoViewCount', 0) or 0,
+                'likes': post.get('likesCount', 0) or 0,
+                'comments': post.get('commentsCount', 0) or 0,
+                'shares': 0,
+                'saves': 0,
+                'caption': post.get('caption', ''),
+                'thumbnail': post.get('displayUrl', '') or post.get('thumbnailUrl', ''),
+            }
         except Exception as e:
-            logger.error(f"Instagram API request failed: {e}")
+            logger.error(f"Apify Instagram scraper failed: {e}")
             return None
 
 
@@ -670,41 +651,61 @@ class SocialMetricsService:
         logger.info(f"Created new Content {new_content.id} for CampaignInfluencer {ci_record.id}")
         return new_content
 
+    def _get_active_campaign_ids(self):
+        """Get IDs of campaigns that are currently active (between start and end date)"""
+        now = datetime.utcnow()
+        active_campaigns = Campaign.query.filter(
+            Campaign.start_date <= now,
+            db.or_(
+                Campaign.end_date.is_(None),
+                Campaign.end_date >= now
+            ),
+            Campaign.status.in_(['active', 'Active', 'in_progress', 'In Progress'])
+        ).all()
+
+        campaign_ids = [c.id for c in active_campaigns]
+        logger.info(f"Found {len(campaign_ids)} active campaigns: {[c.campaign_name for c in active_campaigns]}")
+        return campaign_ids
+
     def run_fetch_job(self):
-        """Main job that fetches metrics from campaign_influencer links"""
+        """Main job that fetches metrics for all content links in active campaigns"""
         logger.info("=" * 60)
         logger.info("Starting scheduled metrics fetch job")
         logger.info("=" * 60)
 
         with app.app_context():
-            # Get all campaign_influencer records with links
-            ci_records = CampaignInfluencer.query.filter(
-                CampaignInfluencer.link.isnot(None),
-                CampaignInfluencer.link != '',
-                CampaignInfluencer.platform.isnot(None)
-            ).all()
+            # Step 1: Get only active campaigns (between start_date and end_date)
+            active_campaign_ids = self._get_active_campaign_ids()
 
-            logger.info(f"Found {len(ci_records)} campaign_influencer records with links to process")
+            if not active_campaign_ids:
+                logger.info("No active campaigns found. Skipping metrics fetch.")
+                return
 
             success_count = 0
             failed_count = 0
             skipped_count = 0
 
+            # Step 2: Process CampaignInfluencer links (creates Content records if needed)
+            ci_records = CampaignInfluencer.query.filter(
+                CampaignInfluencer.campaign_id.in_(active_campaign_ids),
+                CampaignInfluencer.link.isnot(None),
+                CampaignInfluencer.link != '',
+                CampaignInfluencer.platform.isnot(None)
+            ).all()
+
+            logger.info(f"Found {len(ci_records)} campaign_influencer records with links in active campaigns")
+
             for ci_record in ci_records:
                 try:
                     logger.info(f"Processing CampaignInfluencer {ci_record.id}: platform={ci_record.platform}, link={ci_record.link}")
 
-                    # Fetch metrics from the API
                     metrics = self.fetch_metrics_for_url(ci_record.link, ci_record.platform)
 
                     if metrics:
-                        # Find or create content record
                         content = self.find_or_create_content(ci_record)
 
                         if self.update_content_metrics(content, metrics):
                             success_count += 1
-
-                            # Log successful fetch
                             log_entry = MetricsFetchLog(
                                 campaign_influencer_id=ci_record.id,
                                 content_id=content.id,
@@ -715,16 +716,13 @@ class SocialMetricsService:
                                 comments_fetched=metrics.get('comments')
                             )
                             db.session.add(log_entry)
-
                             logger.info(
-                                f"Updated Content {content.id} for CampaignInfluencer {ci_record.id}: "
-                                f"views={metrics.get('views')}, "
-                                f"likes={metrics.get('likes')}, "
-                                f"comments={metrics.get('comments')}"
+                                f"Updated Content {content.id}: "
+                                f"views={metrics.get('views')}, likes={metrics.get('likes')}, comments={metrics.get('comments')}"
                             )
                         else:
                             failed_count += 1
-                            logger.warning(f"No valid metrics data for CampaignInfluencer {ci_record.id}")
+                            logger.warning(f"No valid metrics for CampaignInfluencer {ci_record.id}")
                     else:
                         skipped_count += 1
                         logger.info(f"Skipped CampaignInfluencer {ci_record.id} - no metrics returned")
@@ -732,11 +730,67 @@ class SocialMetricsService:
                 except Exception as e:
                     failed_count += 1
                     logger.error(f"Error processing CampaignInfluencer {ci_record.id}: {e}")
-
-                    # Log failed fetch
                     log_entry = MetricsFetchLog(
                         campaign_influencer_id=ci_record.id,
                         platform=ci_record.platform,
+                        status='failed',
+                        error_message=str(e)
+                    )
+                    db.session.add(log_entry)
+
+            # Step 3: Also update existing Content records that have URLs (added directly, not via CampaignInfluencer)
+            # This covers content links added manually through the UI
+            processed_content_ids = set()
+            content_records = Content.query.filter(
+                Content.campaign_id.in_(active_campaign_ids),
+                Content.url.isnot(None),
+                Content.url != ''
+            ).all()
+
+            logger.info(f"Found {len(content_records)} content records in active campaigns to refresh")
+
+            for content in content_records:
+                # Skip if already processed above via CampaignInfluencer
+                if content.id in processed_content_ids:
+                    continue
+
+                try:
+                    platform = self.detect_platform(content.url) or content.platform
+                    if not platform:
+                        skipped_count += 1
+                        continue
+
+                    logger.info(f"Refreshing Content {content.id}: platform={platform}, url={content.url}")
+
+                    metrics = self.fetch_metrics_for_url(content.url, platform)
+
+                    if metrics:
+                        if self.update_content_metrics(content, metrics):
+                            success_count += 1
+                            log_entry = MetricsFetchLog(
+                                content_id=content.id,
+                                platform=platform,
+                                status='success',
+                                views_fetched=metrics.get('views'),
+                                likes_fetched=metrics.get('likes'),
+                                comments_fetched=metrics.get('comments')
+                            )
+                            db.session.add(log_entry)
+                            logger.info(
+                                f"Refreshed Content {content.id}: "
+                                f"views={metrics.get('views')}, likes={metrics.get('likes')}, comments={metrics.get('comments')}"
+                            )
+                        else:
+                            failed_count += 1
+                    else:
+                        skipped_count += 1
+
+                except Exception as e:
+                    failed_count += 1
+                    logger.error(f"Error refreshing Content {content.id}: {e}")
+                    log_entry = MetricsFetchLog(
+                        content_id=content.id,
+                        platform=content.platform,
                         status='failed',
                         error_message=str(e)
                     )
@@ -763,16 +817,16 @@ def create_scheduler():
     scheduler = BlockingScheduler()
     service = SocialMetricsService()
 
-    # Schedule hourly job
+    # Schedule twice daily — runs at 8:00 AM and 8:00 PM (server time)
     scheduler.add_job(
         service.run_fetch_job,
-        CronTrigger(minute=0),  # Run at the start of every hour
-        id='hourly_metrics_fetch',
-        name='Fetch social media metrics every hour',
+        CronTrigger(hour='8,20', minute=0),
+        id='daily_metrics_fetch',
+        name='Fetch social media metrics twice daily (8 AM & 8 PM)',
         replace_existing=True
     )
 
-    logger.info("Scheduler configured to run metrics fetch every hour at minute 0")
+    logger.info("Scheduler configured to run metrics fetch twice daily at 8:00 AM and 8:00 PM")
 
     return scheduler, service
 

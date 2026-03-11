@@ -10,3 +10,4 @@ PyMySQL==1.1.0
 # Social Media Metrics Service
 APScheduler==3.10.4
 requests==2.31.0
+apify-client==1.8.1
