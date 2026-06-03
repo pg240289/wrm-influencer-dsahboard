@@ -22,6 +22,27 @@
   gap: 24px;
 }
 
+.header-left .btn-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.header-left .btn-back:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
 .header-left h1 {
   font-size: 28px;
   font-weight: 700;

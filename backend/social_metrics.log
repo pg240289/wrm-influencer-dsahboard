@@ -534,3 +534,119 @@
 2026-01-23 19:03:00,796 - SocialMetricsService - INFO - Metrics fetch job completed
 2026-01-23 19:03:00,796 - SocialMetricsService - INFO - Success: 14, Failed: 0, Skipped: 3
 2026-01-23 19:03:00,796 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:29:58,870 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:29:58,908 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:29:58,912 - SocialMetricsService - ERROR - Apify Instagram scraper failed: No module named 'apify_client'
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:29:58,912 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:29:58,921 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:33:42,328 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:33:42,345 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:33:42,348 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:33:42,349 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:33:42,349 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:33:42,354 - SocialMetricsService - ERROR - Apify Instagram scraper failed: cannot import name 'ignore_docs' from 'apify_shared.utils' (C:\Users\Sanjay\AppData\Local\Programs\Python\Python310\lib\site-packages\apify_shared\utils.py)
+2026-03-11 21:33:42,355 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:33:42,356 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:33:42,356 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:33:42,356 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:33:42,356 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:39:45,724 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:39:45,745 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:39:45,747 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:39:45,753 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:39:45,754 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:39:45,754 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:39:45,763 - SocialMetricsService - ERROR - Apify Instagram scraper failed: cannot import name 'ignore_docs' from 'apify_shared.utils' (C:\Users\Sanjay\AppData\Local\Programs\Python\Python310\lib\site-packages\apify_shared\utils.py)
+2026-03-11 21:39:45,763 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:39:45,763 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:39:45,763 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:39:45,763 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:39:45,763 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:40:24,857 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:40:24,878 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:40:24,880 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:40:24,883 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:40:24,883 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:40:24,883 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:40:24,887 - SocialMetricsService - ERROR - Apify Instagram scraper failed: cannot import name 'ignore_docs' from 'apify_shared.utils' (C:\Users\Sanjay\AppData\Local\Programs\Python\Python310\lib\site-packages\apify_shared\utils.py)
+2026-03-11 21:40:24,887 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:40:24,889 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:40:24,889 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:40:24,889 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:40:24,889 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:25,858 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:41:25,859 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:41:25,859 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:41:25,859 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:41:25,859 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:41:25,859 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:25,860 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:41:25,860 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:25,882 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:41:25,887 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:41:25,891 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:41:25,892 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:25,892 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:26,805 - SocialMetricsService - INFO - Running Apify Instagram scraper for: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:28,056 - SocialMetricsService - ERROR - Apify Instagram scraper failed: Input is not valid: Field input.username is required
+2026-03-11 21:41:28,056 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:41:28,056 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:28,066 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:41:28,066 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:41:28,066 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - YouTube fetcher: NOT configured
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - Instagram fetcher: configured
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - Facebook fetcher: NOT configured
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - LinkedIn fetcher: NOT configured
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - Twitter fetcher: NOT configured
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:42,827 - SocialMetricsService - INFO - Starting scheduled metrics fetch job
+2026-03-11 21:41:42,843 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:42,860 - SocialMetricsService - INFO - Found 1 active campaigns: ['Test Campaign WRM']
+2026-03-11 21:41:42,867 - SocialMetricsService - INFO - Found 0 campaign_influencer records with links in active campaigns
+2026-03-11 21:41:42,871 - SocialMetricsService - INFO - Found 1 content records in active campaigns to refresh
+2026-03-11 21:41:42,871 - SocialMetricsService - INFO - Refreshing Content 71: platform=Instagram, url=https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:42,872 - SocialMetricsService - INFO - Fetching metrics from Instagram for URL: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:43,001 - SocialMetricsService - INFO - Running Apify Instagram scraper for: https://www.instagram.com/reel/DUh4219jFCf/?igsh=MXBoODQ2OHN4ZTJ5eg==
+2026-03-11 21:41:44,032 - SocialMetricsService - ERROR - Apify Instagram scraper failed: Input is not valid: Field input.username is required
+2026-03-11 21:41:44,032 - SocialMetricsService - INFO - Database changes committed successfully
+2026-03-11 21:41:44,032 - SocialMetricsService - INFO - ============================================================
+2026-03-11 21:41:44,032 - SocialMetricsService - INFO - Metrics fetch job completed
+2026-03-11 21:41:44,032 - SocialMetricsService - INFO - Success: 0, Failed: 0, Skipped: 1
+2026-03-11 21:41:44,032 - SocialMetricsService - INFO - ============================================================

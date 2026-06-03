@@ -2776,11 +2776,11 @@ def fetch_instagram_post_metrics(url, access_token=None):
 
         # Run Apify's Instagram Post Scraper actor
         run_input = {
-            "directUrls": [url],
-            "resultsLimit": 1,
+            "posts": [url],
+            "detailLevel": "detailedData",
         }
 
-        run = client.actor("shu8hvrXbJbY3Eb9W").call(run_input=run_input)
+        run = client.actor("apify/instagram-post-scraper").call(run_input=run_input)
 
         # Fetch results from the dataset
         items = list(client.dataset(run["defaultDatasetId"]).iterate_items())

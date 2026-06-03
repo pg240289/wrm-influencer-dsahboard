@@ -266,6 +266,12 @@ function UserManagement() {
       {/* Header */}
       <div className="management-header">
         <div className="header-left">
+          <button className="btn-back" onClick={() => navigate('/')}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M12 16l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back
+          </button>
           <h1>User & Role Management</h1>
           <p>Manage users and configure role permissions</p>
         </div>

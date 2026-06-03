@@ -290,12 +290,12 @@ class InstagramFetcher(BaseFetcher):
             client = ApifyClient(self.apify_token)
 
             run_input = {
-                "directUrls": [url],
-                "resultsLimit": 1,
+                "posts": [url],
+                "detailLevel": "detailedData",
             }
 
             logger.info(f"Running Apify Instagram scraper for: {url}")
-            run = client.actor("shu8hvrXbJbY3Eb9W").call(run_input=run_input)
+            run = client.actor("apify/instagram-post-scraper").call(run_input=run_input)
 
             items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
 
