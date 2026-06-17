@@ -1,139 +1,151 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ConfirmProvider } from './contexts/ConfirmContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Login from './components/Login';
-import CampaignDashboard from './CampaignDashboard';
-import CampaignDetail from './CampaignDetail';
-import NewCampaign from './components/NewCampaign';
-import UserManagement from './components/UserManagement';
-import InfluencerList from './components/InfluencerList';
-import InfluencerForm from './components/InfluencerForm';
-import BrandList from './components/BrandList';
-import BrandForm from './components/BrandForm';
-import SetPassword from './components/SetPassword';
-import InfluencerDashboard from './components/InfluencerDashboard';
-import InfluencerCampaignDetail from './components/InfluencerCampaignDetail';
-import MasterData from './components/MasterData';
+import { AppShell } from './components/layout/AppShell';
+import { PortalLayout } from './components/layout/PortalLayout';
 import './App.css';
+
+// Route-level code-splitting: heavy pages (charts, tables, motion) load on demand.
+const Login = lazy(() => import('./pages/Login'));
+const SetPassword = lazy(() => import('./pages/SetPassword'));
+const DashboardHome = lazy(() => import('./pages/DashboardHome'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Campaigns = lazy(() => import('./pages/Campaigns'));
+const CampaignDetail = lazy(() => import('./pages/CampaignDetail'));
+const NewCampaign = lazy(() => import('./pages/NewCampaign'));
+const Influencers = lazy(() => import('./pages/Influencers'));
+const InfluencerForm = lazy(() => import('./pages/InfluencerForm'));
+const UserManagement = lazy(() => import('./pages/UsersAndRoles'));
+const Brands = lazy(() => import('./pages/Brands'));
+const BrandForm = lazy(() => import('./pages/BrandForm'));
+const MasterData = lazy(() => import('./pages/MasterData'));
+const InfluencerHome = lazy(() => import('./pages/portal/InfluencerHome'));
+const InfluencerCampaign = lazy(() => import('./pages/portal/InfluencerCampaign'));
+
+function PageLoader() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-background">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/set-password" element={<SetPassword />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <CampaignDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/campaign/:id"
-              element={
-                <ProtectedRoute>
-                  <CampaignDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/campaigns/new"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <NewCampaign />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute requiredRole="Admin">
-                  <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencers"
-              element={
-                <ProtectedRoute>
-                  <InfluencerList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencers/new"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <InfluencerForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencers/:id/edit"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <InfluencerForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brands"
-              element={
-                <ProtectedRoute>
-                  <BrandList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brands/new"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <BrandForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brands/:id/edit"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <BrandForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/masters"
-              element={
-                <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
-                  <MasterData />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/dashboard"
-              element={
-                <ProtectedRoute requiredRole="Influencer">
-                  <InfluencerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/campaign/:id"
-              element={
-                <ProtectedRoute requiredRole="Influencer">
-                  <InfluencerCampaignDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ConfirmProvider>
+        <Router>
+          <div className="App">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/set-password" element={<SetPassword />} />
+
+                {/* Influencer self-service portal */}
+                <Route
+                  element={
+                    <ProtectedRoute requiredRole="Influencer">
+                      <PortalLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/influencer/dashboard" element={<InfluencerHome />} />
+                  <Route path="/influencer/campaign/:id" element={<InfluencerCampaign />} />
+                </Route>
+
+                {/* Staff application — inside the App Shell */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <AppShell />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/" element={<DashboardHome />} />
+                  <Route path="/campaigns" element={<Campaigns />} />
+                  <Route path="/campaign/:id" element={<CampaignDetail />} />
+                  <Route
+                    path="/campaigns/new"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <NewCampaign />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/influencers" element={<Influencers />} />
+                  <Route
+                    path="/influencers/new"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <InfluencerForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/influencers/:id/edit"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <InfluencerForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/brands" element={<Brands />} />
+                  <Route
+                    path="/brands/new"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <BrandForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/brands/:id/edit"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <BrandForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/masters"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <MasterData />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/analytics"
+                    element={
+                      <ProtectedRoute requiredAnyRole={['Admin', 'Campaign Manager']}>
+                        <Analytics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/users"
+                    element={
+                      <ProtectedRoute requiredRole="Admin">
+                        <UserManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </Router>
+        </ConfirmProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

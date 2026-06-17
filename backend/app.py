@@ -1382,6 +1382,7 @@ def create_campaign(user):
                     influencer_id=assignment['influencer_id'],
                     platform=assignment['platform'],
                     link=assignment.get('link'),
+                    agreed_amount=assignment.get('agreed_amount'),
                     status='pending',
                     assigned_by_user_id=user.id,
                     assigned_at=datetime.utcnow()
@@ -1530,6 +1531,7 @@ def add_campaign_influencer(user, campaign_id):
             influencer_id=data['influencer_id'],
             platform=data['platform'],
             link=data.get('link'),
+            agreed_amount=data.get('agreed_amount'),
             status='pending',
             assigned_by_user_id=user.id,
             assigned_at=datetime.utcnow()
@@ -1558,12 +1560,15 @@ def update_campaign_influencer_link(user, campaign_id, assignment_id):
 
     data = request.get_json()
     try:
-        ci.link = data.get('link', '').strip()
+        if 'link' in data:
+            ci.link = (data.get('link') or '').strip()
+        if 'agreed_amount' in data:
+            ci.agreed_amount = data.get('agreed_amount')
         db.session.commit()
-        return jsonify({'message': 'Link updated', 'assignment': ci.to_dict()}), 200
+        return jsonify({'message': 'Assignment updated', 'assignment': ci.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Failed to update link'}), 500
+        return jsonify({'error': 'Failed to update assignment'}), 500
 
 @app.route('/api/campaigns/<int:campaign_id>/influencers/<int:assignment_id>', methods=['DELETE'])
 @role_required('Admin', 'Campaign Manager')
