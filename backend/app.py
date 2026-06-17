@@ -1382,6 +1382,7 @@ def create_campaign(user):
                     influencer_id=assignment['influencer_id'],
                     platform=assignment['platform'],
                     link=assignment.get('link'),
+                    agreed_amount=assignment.get('agreed_amount'),
                     status='pending',
                     assigned_by_user_id=user.id,
                     assigned_at=datetime.utcnow()
@@ -1530,6 +1531,7 @@ def add_campaign_influencer(user, campaign_id):
             influencer_id=data['influencer_id'],
             platform=data['platform'],
             link=data.get('link'),
+            agreed_amount=data.get('agreed_amount'),
             status='pending',
             assigned_by_user_id=user.id,
             assigned_at=datetime.utcnow()
@@ -1558,12 +1560,15 @@ def update_campaign_influencer_link(user, campaign_id, assignment_id):
 
     data = request.get_json()
     try:
-        ci.link = data.get('link', '').strip()
+        if 'link' in data:
+            ci.link = (data.get('link') or '').strip()
+        if 'agreed_amount' in data:
+            ci.agreed_amount = data.get('agreed_amount')
         db.session.commit()
-        return jsonify({'message': 'Link updated', 'assignment': ci.to_dict()}), 200
+        return jsonify({'message': 'Assignment updated', 'assignment': ci.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Failed to update link'}), 500
+        return jsonify({'error': 'Failed to update assignment'}), 500
 
 @app.route('/api/campaigns/<int:campaign_id>/influencers/<int:assignment_id>', methods=['DELETE'])
 @role_required('Admin', 'Campaign Manager')
@@ -2758,60 +2763,68 @@ def fetch_twitter_post_metrics(url):
     }
 
 
-def fetch_instagram_post_metrics(url, access_token):
-    """Fetch Instagram post metrics (requires OAuth token)"""
-    api_version = os.getenv('FACEBOOK_GRAPH_API_VERSION', 'v21.0')
+def fetch_instagram_post_metrics(url, access_token=None):
+    """Fetch Instagram post metrics using Apify Instagram Post Scraper.
+    No OAuth token needed — uses Apify API token from .env"""
+    from apify_client import ApifyClient
+
+    apify_token = os.getenv('APIFY_API_TOKEN')
+    if not apify_token:
+        return {'error': 'Apify API token not configured. Set APIFY_API_TOKEN in .env'}
+
     shortcode = extract_instagram_shortcode(url)
     if not shortcode:
         return {'error': 'Could not extract post shortcode from URL'}
 
-    # Search for media by shortcode using the IG user's media
-    # First get the IG business account ID
-    ig_account = get_instagram_business_account(access_token)
-    if not ig_account:
-        return {'error': 'Could not find Instagram business account'}
+    try:
+        client = ApifyClient(apify_token)
 
-    ig_id = ig_account['id']
+        # Run Apify's Instagram Post Scraper actor
+        run_input = {
+            "posts": [url],
+            "detailLevel": "detailedData",
+        }
 
-    # Get recent media and find matching shortcode
-    resp = http_requests.get(
-        f'https://graph.facebook.com/{api_version}/{ig_id}/media',
-        params={'fields': 'id,shortcode,like_count,comments_count,media_type', 'limit': 50, 'access_token': access_token}
-    )
-    if resp.status_code != 200:
-        return {'error': f'Instagram API error: {resp.status_code}'}
+        run = client.actor("apify/instagram-post-scraper").call(run_input=run_input)
 
-    media_list = resp.json().get('data', [])
-    target_media = None
-    for media in media_list:
-        if media.get('shortcode') == shortcode:
-            target_media = media
-            break
+        # Fetch results from the dataset
+        items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
 
-    if not target_media:
-        return {'error': 'Post not found in recent media. Make sure it belongs to your connected account.'}
+        if not items:
+            return {'error': 'No data returned from Instagram scraper'}
 
-    media_id = target_media['id']
+        post = items[0]
 
-    # Get insights for this media
-    result = {
-        'likes': target_media.get('like_count', 0),
-        'comments': target_media.get('comments_count', 0),
-        'views': 0,
-        'shares': 0
-    }
+        result = {
+            'likes': post.get('likesCount', 0) or 0,
+            'comments': post.get('commentsCount', 0) or 0,
+            'views': post.get('videoPlayCount', 0) or post.get('videoViewCount', 0) or 0,
+            'shares': 0,
+            'saves': 0,
+            'caption': post.get('caption', ''),
+            'thumbnail': post.get('displayUrl', '') or post.get('thumbnailUrl', ''),
+            'content_type': _detect_instagram_content_type(post),
+            'published_at': post.get('timestamp', ''),
+        }
 
-    # Try to get additional insights (reach, impressions)
-    insights_resp = http_requests.get(
-        f'https://graph.facebook.com/{api_version}/{media_id}/insights',
-        params={'metric': 'impressions,reach', 'access_token': access_token}
-    )
-    if insights_resp.status_code == 200:
-        for insight in insights_resp.json().get('data', []):
-            if insight['name'] == 'impressions':
-                result['views'] = insight['values'][0]['value'] if insight.get('values') else 0
+        return result
 
-    return result
+    except Exception as e:
+        return {'error': f'Apify Instagram scraper failed: {str(e)}'}
+
+
+def _detect_instagram_content_type(post):
+    """Detect Instagram content type from Apify scraper response"""
+    post_type = post.get('type', '').lower()
+    if post_type == 'video' or post.get('isVideo'):
+        # Check if it's a Reel based on URL or product type
+        product_type = post.get('productType', '').lower()
+        if product_type == 'clips' or 'reel' in post.get('url', '').lower():
+            return 'Reel'
+        return 'Video'
+    elif post_type == 'sidecar':
+        return 'Post'  # Carousel
+    return 'Post'
 
 
 def fetch_facebook_post_metrics(url, access_token):
@@ -3175,20 +3188,19 @@ def refresh_content_metrics(current_user, content_id):
         metrics = fetch_youtube_video_metrics(content.url)
     elif platform == 'twitter':
         metrics = fetch_twitter_post_metrics(content.url)
-    elif platform in ('instagram', 'facebook'):
-        # These need OAuth tokens
+    elif platform == 'instagram':
+        # Instagram uses Apify scraper — no OAuth token needed
+        metrics = fetch_instagram_post_metrics(content.url)
+    elif platform == 'facebook':
+        # Facebook still needs OAuth tokens
         token = SocialAccountToken.query.filter_by(
             influencer_id=content.influencer_id,
             platform=platform,
             is_active=True
         ).first()
         if not token:
-            return jsonify({'error': f'{platform.capitalize()} not connected. Please connect your account first.'}), 400
-
-        if platform == 'instagram':
-            metrics = fetch_instagram_post_metrics(content.url, token.access_token)
-        else:
-            metrics = fetch_facebook_post_metrics(content.url, token.access_token)
+            return jsonify({'error': f'Facebook not connected. Please connect your account first.'}), 400
+        metrics = fetch_facebook_post_metrics(content.url, token.access_token)
 
     if not metrics:
         return jsonify({'error': 'Failed to fetch metrics'}), 500
@@ -3201,7 +3213,21 @@ def refresh_content_metrics(current_user, content_id):
     content.likes = metrics.get('likes', content.likes)
     content.comments = metrics.get('comments', content.comments)
     content.shares = metrics.get('shares', content.shares)
+    content.saves = metrics.get('saves', content.saves) if metrics.get('saves') else content.saves
     content.last_metrics_update = datetime.utcnow()
+
+    # Update extra fields if returned by scraper (e.g., Apify Instagram)
+    if metrics.get('caption') and not content.caption:
+        content.caption = metrics['caption']
+    if metrics.get('thumbnail') and not content.thumbnail:
+        content.thumbnail = metrics['thumbnail']
+    if metrics.get('content_type'):
+        content.content_type = metrics['content_type']
+    if metrics.get('published_at') and not content.published_at:
+        try:
+            content.published_at = datetime.fromisoformat(metrics['published_at'].replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            pass
 
     # Calculate engagement rate
     influencer = Influencer.query.get(content.influencer_id)
