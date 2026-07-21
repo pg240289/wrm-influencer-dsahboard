@@ -14,6 +14,7 @@ import os
 import re
 import requests as http_requests
 from dotenv import load_dotenv
+from url_utils import normalize_post_url
 
 load_dotenv()
 
@@ -730,6 +731,21 @@ def get_current_user():
 
 # ==================== HELPER FUNCTIONS ====================
 
+def _clean_post_url(raw_url, expected_platform, field='url', required=True):
+    """Validate a pasted post URL against the expected platform.
+    Returns (canonical_url, suggested_content_type, error_response).
+    error_response is a (jsonify(...), 400) tuple when invalid, else None.
+    When the field is optional and blank, returns (None, None, None)."""
+    if raw_url is None or not str(raw_url).strip():
+        if required:
+            return None, None, (jsonify({'error': 'URL is required', 'field': field}), 400)
+        return None, None, None
+    res = normalize_post_url(raw_url, expected_platform)
+    if not res['ok']:
+        return None, None, (jsonify({'error': res['error'], 'field': field}), 400)
+    return res['canonical_url'], res['suggested_content_type'], None
+
+
 def generate_random_password(length=12):
     """Generate a secure random password"""
     # Ensure password has at least one character from each category
@@ -1376,12 +1392,19 @@ def create_campaign(user):
                 if not influencer or influencer.status != 'active':
                     continue  # Skip inactive or non-existent influencers
 
+                platform = assignment['platform']
+
+                canonical_link, _st, link_err = _clean_post_url(assignment.get('link'), platform, field='link', required=False)
+                if link_err:
+                    db.session.rollback()
+                    return link_err
+
                 # Create CampaignInfluencer record with minimal data
                 campaign_influencer = CampaignInfluencer(
                     campaign_id=campaign.id,
                     influencer_id=assignment['influencer_id'],
-                    platform=assignment['platform'],
-                    link=assignment.get('link'),
+                    platform=platform,
+                    link=canonical_link,
                     agreed_amount=assignment.get('agreed_amount'),
                     status='pending',
                     assigned_by_user_id=user.id,
@@ -1394,13 +1417,17 @@ def create_campaign(user):
                 content_links = assignment.get('content_links', [])
                 for cl in content_links:
                     if cl.get('url', '').strip():
+                        canonical_url, suggested_type, cl_err = _clean_post_url(cl.get('url'), platform, field='url', required=True)
+                        if cl_err:
+                            db.session.rollback()
+                            return cl_err
                         content = Content(
                             campaign_id=campaign.id,
                             influencer_id=assignment['influencer_id'],
                             campaign_influencer_id=campaign_influencer.id,
-                            platform=assignment['platform'],
-                            content_type=cl.get('content_type', 'Post'),
-                            url=cl['url'].strip(),
+                            platform=platform,
+                            content_type=cl.get('content_type') or suggested_type or 'Post',
+                            url=canonical_url,
                             status='published',
                             published_at=datetime.utcnow(),
                             created_at=datetime.utcnow()
@@ -1525,12 +1552,16 @@ def add_campaign_influencer(user, campaign_id):
     if existing:
         return jsonify({'error': 'Influencer already assigned to this campaign with this platform'}), 400
 
+    canonical_link, _st, link_err = _clean_post_url(data.get('link'), data['platform'], field='link', required=False)
+    if link_err:
+        return link_err
+
     try:
         ci = CampaignInfluencer(
             campaign_id=campaign_id,
             influencer_id=data['influencer_id'],
             platform=data['platform'],
-            link=data.get('link'),
+            link=canonical_link,
             agreed_amount=data.get('agreed_amount'),
             status='pending',
             assigned_by_user_id=user.id,
@@ -1561,7 +1592,10 @@ def update_campaign_influencer_link(user, campaign_id, assignment_id):
     data = request.get_json()
     try:
         if 'link' in data:
-            ci.link = (data.get('link') or '').strip()
+            canonical_link, _st, link_err = _clean_post_url(data.get('link'), ci.platform, field='link', required=False)
+            if link_err:
+                return link_err
+            ci.link = canonical_link or ''
         if 'agreed_amount' in data:
             ci.agreed_amount = data.get('agreed_amount')
         db.session.commit()
@@ -1608,8 +1642,9 @@ def add_assignment_content(user, campaign_id, assignment_id):
         return jsonify({'error': 'Assignment not found'}), 404
 
     data = request.get_json()
-    if not data.get('url'):
-        return jsonify({'error': 'URL is required'}), 400
+    canonical, suggested_type, err = _clean_post_url(data.get('url'), ci.platform, field='url', required=True)
+    if err:
+        return err
 
     try:
         content = Content(
@@ -1617,8 +1652,8 @@ def add_assignment_content(user, campaign_id, assignment_id):
             influencer_id=ci.influencer_id,
             campaign_influencer_id=ci.id,
             platform=ci.platform,
-            content_type=data.get('content_type', 'Post'),
-            url=data['url'].strip(),
+            content_type=data.get('content_type') or suggested_type or 'Post',
+            url=canonical,
             caption=data.get('caption', ''),
             status='published',
             published_at=datetime.utcnow(),
@@ -1648,7 +1683,12 @@ def update_content(user, campaign_id, content_id):
     data = request.get_json()
     try:
         if 'url' in data:
-            content.url = data['url'].strip()
+            canonical, suggested_type, err = _clean_post_url(data.get('url'), content.platform, field='url', required=True)
+            if err:
+                return err
+            content.url = canonical
+            if 'content_type' not in data and suggested_type:
+                content.content_type = suggested_type
         if 'content_type' in data:
             content.content_type = data['content_type']
         if 'caption' in data:
@@ -2500,11 +2540,10 @@ def add_my_content(current_user, assignment_id):
         return jsonify({'error': 'You are not assigned to this campaign'}), 404
 
     data = request.get_json()
-    url = data.get('url', '').strip() if data else ''
-    content_type = data.get('content_type', 'Post')
-
-    if not url:
-        return jsonify({'error': 'URL is required'}), 400
+    content_type = data.get('content_type') if data else None
+    canonical, suggested_type, err = _clean_post_url((data or {}).get('url'), assignment.platform, field='url', required=True)
+    if err:
+        return err
 
     try:
         content = Content(
@@ -2512,8 +2551,8 @@ def add_my_content(current_user, assignment_id):
             influencer_id=current_user.influencer_profile.id,
             campaign_influencer_id=assignment.id,
             platform=assignment.platform,
-            content_type=content_type,
-            url=url,
+            content_type=content_type or suggested_type or 'Post',
+            url=canonical,
             status='published',
             published_at=datetime.utcnow(),
             created_at=datetime.utcnow()
@@ -2539,7 +2578,10 @@ def update_my_content(current_user, content_id):
     data = request.get_json()
     try:
         if 'url' in data:
-            content.url = data['url'].strip()
+            canonical, suggested_type, err = _clean_post_url(data.get('url'), content.platform, field='url', required=True)
+            if err:
+                return err
+            content.url = canonical
         if 'content_type' in data:
             content.content_type = data['content_type']
         content.updated_at = datetime.utcnow()
@@ -2779,13 +2821,16 @@ def fetch_instagram_post_metrics(url, access_token=None):
     try:
         client = ApifyClient(apify_token)
 
-        # Run Apify's Instagram Post Scraper actor
+        # Fetch ONE post by URL. apify/instagram-post-scraper needs a profile `username`;
+        # apify/instagram-scraper accepts direct post URLs.
         run_input = {
-            "posts": [url],
-            "detailLevel": "detailedData",
+            "directUrls": [url],
+            "resultsType": "posts",
+            "resultsLimit": 1,
+            "addParentData": False,
         }
 
-        run = client.actor("apify/instagram-post-scraper").call(run_input=run_input)
+        run = client.actor("apify/instagram-scraper").call(run_input=run_input)
 
         # Fetch results from the dataset
         items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
