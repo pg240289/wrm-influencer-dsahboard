@@ -14,8 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
+import { CONTENT_TYPES, getPlatform, looksLikeValidPostUrl } from '@/lib/platforms'
 
-const CONTENT_TYPES = ['Post', 'Reel', 'Story', 'Video', 'Short']
 const CHART = { views: '#6366f1', likes: '#ec4899', comments: '#10b981' }
 
 export default function InfluencerCampaign() {
@@ -198,14 +199,19 @@ export default function InfluencerCampaign() {
                   </div>
 
                   {addingFor === a.id && (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Select value={newType} onValueChange={setNewType}>
-                        <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                        <SelectContent>{CONTENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <Input type="url" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://…" className="min-w-[180px] flex-1" />
-                      <Button size="sm" onClick={() => addContent(a.id)} disabled={!newUrl.trim()}>Save</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setAddingFor(null)}>Cancel</Button>
+                    <div className="mt-3 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select value={newType} onValueChange={setNewType}>
+                          <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                          <SelectContent>{(getPlatform(a.platform)?.contentTypes || CONTENT_TYPES).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Input type="url" value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
+                          placeholder={getPlatform(a.platform)?.example || 'https://…'}
+                          className={cn('min-w-[180px] flex-1', !looksLikeValidPostUrl(a.platform, newUrl) && 'border-destructive')} />
+                        <Button size="sm" onClick={() => addContent(a.id)} disabled={!newUrl.trim() || !looksLikeValidPostUrl(a.platform, newUrl)}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setAddingFor(null)}>Cancel</Button>
+                      </div>
+                      <p className="pl-1 text-xs text-muted-foreground">{getPlatform(a.platform)?.hint}</p>
                     </div>
                   )}
 
@@ -218,8 +224,9 @@ export default function InfluencerCampaign() {
                           <Badge variant="secondary" className="shrink-0">{cl.content_type}</Badge>
                           {editingId === cl.id ? (
                             <div className="flex flex-1 items-center gap-2">
-                              <Input type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="flex-1" />
-                              <Button size="sm" onClick={() => updateContent(a.id, cl.id)}>Save</Button>
+                              <Input type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)}
+                                className={cn('flex-1', !looksLikeValidPostUrl(a.platform, editUrl) && 'border-destructive')} />
+                              <Button size="sm" onClick={() => updateContent(a.id, cl.id)} disabled={!editUrl.trim() || !looksLikeValidPostUrl(a.platform, editUrl)}>Save</Button>
                               <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
                             </div>
                           ) : (

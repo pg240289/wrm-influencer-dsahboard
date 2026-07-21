@@ -27,9 +27,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
+import { PLATFORMS as PLATFORM_SPECS, CONTENT_TYPES, getPlatform, looksLikeValidPostUrl } from '@/lib/platforms'
 
-const PLATFORMS = ['Instagram', 'YouTube', 'Facebook', 'X (Twitter)', 'LinkedIn']
-const CONTENT_TYPES = ['Post', 'Reel', 'Story', 'Video', 'Short']
 const CHART = { views: '#6366f1', likes: '#ec4899', comments: '#10b981' }
 
 const formatNumber = (num) => {
@@ -592,17 +592,21 @@ export default function CampaignDetail() {
                         </div>
 
                         {addingContentFor === inf.assignment_id && (
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <Select value={newContentType} onValueChange={setNewContentType}>
-                              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {CONTENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                            <Input type="url" value={newContentUrl} onChange={(e) => setNewContentUrl(e.target.value)}
-                              placeholder="https://…" className="flex-1 min-w-[180px]" />
-                            <Button size="sm" onClick={() => handleAddContent(inf.assignment_id)} disabled={!newContentUrl.trim()}>Add</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setAddingContentFor(null)}>Cancel</Button>
+                          <div className="mb-2 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Select value={newContentType} onValueChange={setNewContentType}>
+                                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {(getPlatform(inf.platform)?.contentTypes || CONTENT_TYPES).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              <Input type="url" value={newContentUrl} onChange={(e) => setNewContentUrl(e.target.value)}
+                                placeholder={getPlatform(inf.platform)?.example || 'https://…'}
+                                className={cn('flex-1 min-w-[180px]', !looksLikeValidPostUrl(inf.platform, newContentUrl) && 'border-destructive')} />
+                              <Button size="sm" onClick={() => handleAddContent(inf.assignment_id)} disabled={!newContentUrl.trim() || !looksLikeValidPostUrl(inf.platform, newContentUrl)}>Add</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setAddingContentFor(null)}>Cancel</Button>
+                            </div>
+                            <p className="pl-1 text-xs text-muted-foreground">{getPlatform(inf.platform)?.hint}</p>
                           </div>
                         )}
 
@@ -614,8 +618,9 @@ export default function CampaignDetail() {
                                 <Badge variant="secondary" className="shrink-0">{content.content_type}</Badge>
                                 {editingContentId === content.id ? (
                                   <div className="flex flex-1 items-center gap-2">
-                                    <Input type="url" value={editContentUrl} onChange={(e) => setEditContentUrl(e.target.value)} className="flex-1" />
-                                    <Button size="sm" onClick={() => handleUpdateContent(content.id)}>Save</Button>
+                                    <Input type="url" value={editContentUrl} onChange={(e) => setEditContentUrl(e.target.value)}
+                                      className={cn('flex-1', !looksLikeValidPostUrl(content.platform, editContentUrl) && 'border-destructive')} />
+                                    <Button size="sm" onClick={() => handleUpdateContent(content.id)} disabled={!editContentUrl.trim() || !looksLikeValidPostUrl(content.platform, editContentUrl)}>Save</Button>
                                     <Button size="sm" variant="ghost" onClick={() => setEditingContentId(null)}>Cancel</Button>
                                   </div>
                                 ) : (
@@ -710,7 +715,7 @@ export default function CampaignDetail() {
               <Select value={selPlatform} onValueChange={setSelPlatform}>
                 <SelectTrigger><SelectValue placeholder="Select platform" /></SelectTrigger>
                 <SelectContent>
-                  {PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  {PLATFORM_SPECS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

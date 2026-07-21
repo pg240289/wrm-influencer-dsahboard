@@ -13,11 +13,10 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { PLATFORMS as PLATFORM_SPECS, CONTENT_TYPES, getPlatform, looksLikeValidPostUrl } from '@/lib/platforms'
 
-const PLATFORMS = ['Instagram', 'YouTube', 'Facebook', 'X (Twitter)', 'LinkedIn']
 const TIERS = ['Mega', 'Macro', 'Micro', 'Nano']
 const OBJECTIVES = ['Brand Awareness', 'Product Launch', 'Engagement', 'Lead Generation', 'Sales Conversion', 'Content Creation']
-const CONTENT_TYPES = ['Post', 'Reel', 'Story', 'Video', 'Short']
 const TIER_VARIANT = { Mega: 'default', Macro: 'info', Micro: 'success', Nano: 'secondary' }
 
 const formatNumber = (num) => {
@@ -157,7 +156,7 @@ export default function NewCampaign() {
   const removeLink = (id, p, idx) => mutateLinks(id, p, (links) => links.filter((_, i) => i !== idx))
 
   const platformsForInfluencer = (inf) => {
-    const all = PLATFORMS.filter((p) => (followersFor(inf, p) || 0) > 0)
+    const all = PLATFORM_SPECS.map((p) => p.value).filter((p) => (followersFor(inf, p) || 0) > 0)
     return selectedPlatforms.length > 0 ? all.filter((p) => selectedPlatforms.includes(p)) : all
   }
 
@@ -167,6 +166,13 @@ export default function NewCampaign() {
     if (!formData.brand_id) return 'Brand is required'
     if (!formData.start_date) return 'Start date is required'
     if (formData.end_date && formData.start_date > formData.end_date) return 'End date must be after start date'
+    for (const inf of selectedInfluencers) {
+      for (const cl of inf.content_links) {
+        if (cl.url && cl.url.trim() && !looksLikeValidPostUrl(inf.platform, cl.url)) {
+          return 'One or more content links are not valid for their platform. Fix the highlighted URLs.'
+        }
+      }
+    }
     return null
   }
 
@@ -345,8 +351,8 @@ export default function NewCampaign() {
               <div>
                 <Label className="mb-2 block">Campaign platforms</Label>
                 <div className="flex flex-wrap gap-2">
-                  {PLATFORMS.map((p) => (
-                    <Chip key={p} active={selectedPlatforms.includes(p)} onClick={() => togglePlatform(p)}>{p}</Chip>
+                  {PLATFORM_SPECS.map((p) => (
+                    <Chip key={p.value} active={selectedPlatforms.includes(p.value)} onClick={() => togglePlatform(p.value)}>{p.label}</Chip>
                   ))}
                 </div>
               </div>
@@ -394,22 +400,29 @@ export default function NewCampaign() {
                                       <Input type="number" value={getAgreed(inf.id, platform)} onChange={(e) => setAgreed(inf.id, platform, e.target.value)} placeholder="0" className="h-8 w-40 pl-6" />
                                     </div>
                                   </div>
-                                  {links.map((cl, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                      <Select value={cl.content_type} onValueChange={(v) => updateLink(inf.id, platform, idx, 'content_type', v)}>
-                                        <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          {CONTENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                        </SelectContent>
-                                      </Select>
-                                      <Input type="url" value={cl.url} placeholder="https://…" className="h-8 flex-1"
-                                        onChange={(e) => updateLink(inf.id, platform, idx, 'url', e.target.value)} />
-                                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                                        onClick={() => removeLink(inf.id, platform, idx)}>
-                                        <X className="h-4 w-4" />
-                                      </Button>
+                                  {links.map((cl, idx) => {
+                                    const invalid = !looksLikeValidPostUrl(platform, cl.url)
+                                    return (
+                                    <div key={idx} className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <Select value={cl.content_type} onValueChange={(v) => updateLink(inf.id, platform, idx, 'content_type', v)}>
+                                          <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
+                                          <SelectContent>
+                                            {(getPlatform(platform)?.contentTypes || CONTENT_TYPES).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                          </SelectContent>
+                                        </Select>
+                                        <Input type="url" value={cl.url} placeholder={getPlatform(platform)?.example || 'https://…'}
+                                          className={cn('h-8 flex-1', invalid && 'border-destructive')}
+                                          onChange={(e) => updateLink(inf.id, platform, idx, 'url', e.target.value)} />
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                                          onClick={() => removeLink(inf.id, platform, idx)}>
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                      <p className={cn('pl-1 text-xs', invalid ? 'text-destructive' : 'text-muted-foreground')}>{getPlatform(platform)?.hint}</p>
                                     </div>
-                                  ))}
+                                    )
+                                  })}
                                   <Button type="button" variant="outline" size="sm" className="h-7" onClick={() => addLink(inf.id, platform)}>
                                     <Plus className="h-3.5 w-3.5" /> Add content link
                                   </Button>
