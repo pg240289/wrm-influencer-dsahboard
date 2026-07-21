@@ -686,6 +686,7 @@ class SocialMetricsService:
             success_count = 0
             failed_count = 0
             skipped_count = 0
+            processed_content_ids = set()
 
             # Step 2: Process CampaignInfluencer links (creates Content records if needed)
             ci_records = CampaignInfluencer.query.filter(
@@ -705,6 +706,8 @@ class SocialMetricsService:
 
                     if metrics:
                         content = self.find_or_create_content(ci_record)
+                        # Mark this content as handled so Step 3 does not re-fetch the same URL
+                        processed_content_ids.add(content.id)
 
                         if self.update_content_metrics(content, metrics):
                             success_count += 1
@@ -741,8 +744,7 @@ class SocialMetricsService:
                     db.session.add(log_entry)
 
             # Step 3: Also update existing Content records that have URLs (added directly, not via CampaignInfluencer)
-            # This covers content links added manually through the UI
-            processed_content_ids = set()
+            # This covers content links added manually through the UI; skips any already handled in Step 2
             content_records = Content.query.filter(
                 Content.campaign_id.in_(active_campaign_ids),
                 Content.url.isnot(None),
